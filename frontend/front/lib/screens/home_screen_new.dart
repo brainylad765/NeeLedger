@@ -1,0 +1,387 @@
+import 'package:flutter/material.dart';
+import '../widgets/custom_button.dart';
+
+class HomeScreen extends StatefulWidget {
+  static const String routeName = '/home';
+
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D47A1), // Blue background
+      body: SafeArea(
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          child: Column(
+            children: [
+              // Header Section with Company Info
+              Stack(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 40),
+
+                        // Company Logo
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.eco,
+                            color: Color(0xFF0D47A1),
+                            size: 50,
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Company Title
+                        const Text(
+                          'BlueCarbonBazaar',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Company Description
+                        const Text(
+                          'Building Trust in Climate Action',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        const Text(
+                          'Leading the way in carbon credit verification and trading',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        const Text(
+                          'Empowering organizations to make a real environmental impact',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+
+                        const SizedBox(height: 40),
+
+                        // Get Started Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: CustomButton(
+                            text: 'Get Started',
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/main');
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Profile Button in top right corner
+                  Positioned(
+                    top: 20,
+                    right: 20,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, '/login');
+                      },
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(25),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          color: Color(0xFF0D47A1),
+                          size: 30,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Projects Summary Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24.0),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0F1416),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ongoing Projects',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Project List
+                    _buildProjectItem('Solar Farm Initiative', 'Active', '1.2M tonnes CO₂'),
+                    _buildProjectItem('Reforestation Program', 'Active', '850K tonnes CO₂'),
+                    _buildProjectItem('Wind Energy Project', 'Passive', '600K tonnes CO₂'),
+                    _buildProjectItem('Ocean Cleanup Initiative', 'Active', '450K tonnes CO₂'),
+
+                    const SizedBox(height: 32),
+
+                    // Total Statistics
+                    const Text(
+                      'Platform Totals',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        _buildTotalCard(
+                          'Carbon Converted',
+                          '3.2M tonnes',
+                          Icons.eco,
+                          const Color(0xFF4CAF50),
+                        ),
+                        const SizedBox(width: 16),
+                        _buildTotalCard(
+                          'Credits Generated',
+                          '2.8M',
+                          Icons.monetization_on,
+                          const Color(0xFFFF9800),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        _buildTotalCard(
+                          'Credits Sold',
+                          '2.1M',
+                          Icons.trending_up,
+                          const Color(0xFF2196F3),
+                        ),
+                        const SizedBox(width: 16),
+                        _buildTotalCard(
+                          'Revenue Generated',
+                          '\$15.2M',
+                          Icons.account_balance,
+                          const Color(0xFF9C27B0),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    // Contact Us Section
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E1E),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'Contact Us',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Have questions about our platform or carbon credit projects?',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.email, color: const Color(0xFF0D47A1)),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'contact@bluecarbonbazaar.com',
+                                style: TextStyle(
+                                  color: Color(0xFF0D47A1),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProjectItem(String name, String status, String carbonAmount) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  carbonAmount,
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: status == 'Active'
+                  ? const Color(0xFF4CAF50).withOpacity(0.2)
+                  : const Color(0xFFFF9800).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: status == 'Active'
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFFF9800),
+              ),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(
+                color: status == 'Active'
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFFF9800),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTotalCard(String title, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E1E),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.grey[400],
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

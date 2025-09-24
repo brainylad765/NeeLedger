@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "896614751960",
+    "project_id": "blockzen-carbon-registry",
+    "storage_bucket": "blockzen-carbon-registry.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:896614751960:android:533c5c843340a6b90941ad",
+        "android_client_info": {
+          "package_name": "com.example.front"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTezUJa2yeUTQ9dPA7vYyHCXlH1MlQIes"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
