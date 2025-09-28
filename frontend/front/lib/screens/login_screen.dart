@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../providers/user_provider.dart';
 import '../models/user_model.dart';
 import 'dashboard_screen.dart';
@@ -22,6 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool isProjectProponent = true;
   bool hasCompletedKYC = false;
+
+  final supabase = Supabase.instance.client;
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (fullNameController.text.isEmpty ||
                         emailController.text.isEmpty ||
                         mobileController.text.isEmpty ||
@@ -187,29 +190,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                       return;
                     }
-                    final role = isProjectProponent
-                        ? 'Project Proponent'
-                        : 'Retailer';
-                    final mockUser = User(
-                      id: 'mock_${DateTime.now().millisecondsSinceEpoch}',
-                      name: fullNameController.text,
-                      email: emailController.text,
-                      mobile: mobileController.text,
-                      password: passwordController.text,
-                      walletAddress:
-                          '0xmock_${DateTime.now().millisecondsSinceEpoch}',
-                      credits: 1000.0,
-                      role: role,
-                      memberSince: DateTime.now(),
-                    );
-                    Provider.of<UserProvider>(
-                      context,
-                      listen: false,
-                    ).setUser(mockUser);
-                    Navigator.pushReplacementNamed(
-                      context,
-                      DashboardScreen.routeName,
-                    );
+                    try {
+                      final response = await supabase.auth.signUp(
+                        email: emailController.text.trim(),
+                        password: passwordController.text.trim(),
+                      );
+                      if (response.user != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Account created successfully!'),
+                          ),
+                        );
+                        Navigator.pushReplacementNamed(
+                          context,
+                          DashboardScreen.routeName,
+                        );
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0D47A1),
