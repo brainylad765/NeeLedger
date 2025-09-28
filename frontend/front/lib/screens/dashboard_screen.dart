@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:file_picker/file_picker.dart'; // For file selection
+import 'dart:io';
+
 import 'home_screen_new.dart';
 import 'market_wallet_screen.dart';
 import 'profile_screen.dart';
 import 'data_screen.dart';
 import 'projects_screen.dart';
+import 'welcome_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   static const String routeName = '/dashboard';
@@ -15,7 +20,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _selectedIndex = 2; // Start on Home tab (index 2)
+  final supabase = Supabase.instance.client;
+
+  int _selectedIndex = 2; // Start on Home tab
   int _hoveredIndex = -1;
 
   final List<Widget> _pages = [
@@ -32,12 +39,115 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  /// ===============================
+  /// Supabase Upload Functionality
+  /// ===============================
+  Future<void> _uploadDocument() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx'],
+    );
+
+    if (result == null || result.files.isEmpty) return;
+
+    final file = File(result.files.single.path!);
+    final fileName = result.files.single.name;
+    final user = supabase.auth.currentUser;
+
+    if (user == null) return;
+
+    try {
+      final storagePath = '${user.id}/$fileName';
+      await supabase.storage.from('projects').upload(storagePath, file);
+
+      final fileUrl =
+          supabase.storage.from('projects').getPublicUrl(storagePath);
+
+      await supabase.from('projects').insert({
+        'user_id': user.id,
+        'title': fileName,
+        'file_url': fileUrl,
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Document uploaded successfully!')),
+        );
+        setState(() {});
+      }
+    } on StorageException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload failed: ${e.message}')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
+      );
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchProjects() {
+    return supabase
+        .from('projects')
+        .select()
+        .order('created_at', ascending: false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async => false, // Lock dashboard - prevent back navigation
+      onWillPop: () async => false,
       child: Scaffold(
-        body: SafeArea(child: _pages[_selectedIndex]),
+        appBar: AppBar(
+          title: const Text('Dashboard'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                await supabase.auth.signOut();
+                if (mounted) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                        builder: (context) => const WelcomeScreen()),
+                  );
+                }
+              },
+            )
+          ],
+        ),
+        body: _selectedIndex == 1
+            ? FutureBuilder<List<Map<String, dynamic>>>(
+                future: _fetchProjects(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+                  final projects = snapshot.data ?? [];
+                  if (projects.isEmpty) {
+                    return const Center(
+                        child: Text('No projects yet. Upload one!'));
+                  }
+
+                  return ListView.builder(
+                    itemCount: projects.length,
+                    itemBuilder: (context, index) {
+                      final project = projects[index];
+                      return ListTile(
+                        title: Text(project['title']),
+                        subtitle: Text('Uploaded on: ${project['created_at']}'),
+                        trailing: const Icon(Icons.arrow_forward),
+                        onTap: () {
+                          // You could launch URL here with url_launcher
+                        },
+                      );
+                    },
+                  );
+                },
+              )
+            : SafeArea(child: _pages[_selectedIndex]),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: Theme.of(context).bottomNavigationBarTheme.backgroundColor,
@@ -80,6 +190,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             }),
           ),
         ),
+        floatingActionButton: _selectedIndex == 1
+            ? FloatingActionButton(
+                onPressed: _uploadDocument,
+                child: const Icon(Icons.add),
+              )
+            : null,
       ),
     );
   }
