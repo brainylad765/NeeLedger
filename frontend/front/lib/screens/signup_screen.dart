@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:front/screens/login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
-  static const String routeName = '/signup';
-
-  // ignore: use_super_parameters
-  const SignUpScreen({Key? key}) : super(key: key);
+  const SignUpScreen({super.key});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -13,257 +12,212 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _selectedRole = 'Project Proponent';
+  final supabase = Supabase.instance.client;
 
+  // Controllers
   final TextEditingController _fullNameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
-  final TextEditingController _kybController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _kybController = TextEditingController();
 
-  void _selectRole(String role) {
-    setState(() {
-      _selectedRole = role;
-    });
-  }
+  String? _selectedRole;
 
-  void _submit() {
+  Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
-      // TODO: Implement registration logic with selected role and form data
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully!')),
-      );
+      try {
+        final authResponse = await supabase.auth.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          data: {
+            'full_name': _fullNameController.text.trim(),
+            'mobile': _mobileController.text.trim(),
+            'role': _selectedRole,
+            'kyb_link': _kybController.text.trim(),
+          },
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Signup successful! Please check your email for verification.'),
+            ),
+          );
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        }
+      } on AuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Signup Failed: ${e.message}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unexpected error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = const Color(0xFF0D47A1);
-    final accentColor = const Color(0xFF00BFA5);
-    final backgroundColor = const Color(0xFF1A1A1A);
-    final cardColor = const Color(0xFF282828);
+    const primaryColor = Colors.lightBlueAccent;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SafeArea(
+      backgroundColor: Colors.black,
+      body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
               children: [
-                // App Logo
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: primaryColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    'B',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
+                // NeeLedger Title
                 Text(
-                  'NeeLedger',
+                  'NEELEDGER',
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 24,
+                    fontSize: 32,
                     fontWeight: FontWeight.bold,
+                    foreground: Paint()
+                      ..shader = const LinearGradient(
+                        colors: [Colors.white, Colors.lightBlueAccent],
+                      ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Create your account to get started',
-                  style: GoogleFonts.roboto(
-                    color: Colors.white70,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Role Selector
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _selectRole('Project Proponent'),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: _selectedRole == 'Project Proponent'
-                              ? accentColor.withValues(alpha: 51)
-                              : Colors.transparent,
-                          side: BorderSide(
-                            color: _selectedRole == 'Project Proponent'
-                                ? accentColor
-                                : Colors.white54,
-                            width: 2,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: Text(
-                          'Project Proponent',
-                          style: GoogleFonts.poppins(
-                            color: _selectedRole == 'Project Proponent'
-                                ? accentColor
-                                : Colors.white70,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _selectRole('Retailer'),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: _selectedRole == 'Retailer'
-                              ? accentColor.withValues(alpha: 51)
-                              : Colors.transparent,
-                          side: BorderSide(
-                            color: _selectedRole == 'Retailer'
-                                ? accentColor
-                                : Colors.white54,
-                            width: 2,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: Text(
-                          'Retailer',
-                          style: GoogleFonts.poppins(
-                            color: _selectedRole == 'Retailer'
-                                ? accentColor
-                                : Colors.white70,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                // Input Fields
+                const SizedBox(height: 32),
+
+                // Full Name
                 TextFormField(
                   controller: _fullNameController,
                   style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Full Name *',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    hintText: 'Enter your full name',
-                    hintStyle: const TextStyle(color: Colors.white38),
-                    filled: true,
-                    fillColor: cardColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
+                  decoration: const InputDecoration(
+                    labelText: 'Full Name',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
                     ),
                   ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Full Name is required'
-                      : null,
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Enter full name' : null,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Email *',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    hintText: 'Enter your email address',
-                    hintStyle: const TextStyle(color: Colors.white38),
-                    filled: true,
-                    fillColor: cardColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty)
-                      return 'Email is required';
-                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                    if (!emailRegex.hasMatch(value))
-                      return 'Enter a valid email';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
+
+                // Mobile
                 TextFormField(
                   controller: _mobileController,
+                  keyboardType: TextInputType.phone,
                   style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Mobile Number *',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    hintText: 'Enter your mobile number',
-                    hintStyle: const TextStyle(color: Colors.white38),
-                    filled: true,
-                    fillColor: cardColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
+                  decoration: const InputDecoration(
+                    labelText: 'Mobile',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
                     ),
                   ),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Mobile Number is required'
-                      : null,
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Enter mobile number' : null,
                 ),
                 const SizedBox(height: 16),
+
+                // Email
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
+                    ),
+                  ),
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Enter email' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // Password
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
+                    ),
+                  ),
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Enter password' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // Role Dropdown
+                DropdownButtonFormField<String>(
+                  value: _selectedRole,
+                  dropdownColor: Colors.black,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Role',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Admin', child: Text('Admin')),
+                    DropdownMenuItem(value: 'User', child: Text('User')),
+                  ],
+                  onChanged: (value) => setState(() => _selectedRole = value),
+                  validator: (value) =>
+                      value == null ? 'Select a role' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // KYB Link
                 TextFormField(
                   controller: _kybController,
                   style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'KYB Registration Form Link',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    hintText: 'Enter KYB registration form link/etc...',
-                    hintStyle: const TextStyle(color: Colors.white38),
-                    filled: true,
-                    fillColor: cardColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
+                  decoration: const InputDecoration(
+                    labelText: 'KYB Link',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Password *',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    hintText: 'Create a password',
-                    hintStyle: const TextStyle(color: Colors.white38),
-                    filled: true,
-                    fillColor: cardColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  obscureText: true,
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Password is required'
-                      : null,
-                ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
+
+                // Create Account Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _submit,
+                    onPressed: _signup,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -279,6 +233,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         color: Colors.white,
                       ),
                     ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Login Redirect
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    );
+                  },
+                  child: const Text(
+                    "Already have an account? Log in",
+                    style: TextStyle(color: primaryColor),
                   ),
                 ),
               ],
