@@ -22,11 +22,12 @@ class TransactionProvider with ChangeNotifier {
 
   void buyCredits(double amount) {
     // Simulate buying credits
+    final now = DateTime.now();
     final transaction = Transaction(
-      id: DateTime.now().toString(),
+      id: now.millisecondsSinceEpoch.toString(),
       amount: amount,
       type: 'buy',
-      date: DateTime.now().toIso8601String(),
+      date: now.toIso8601String(),
       status: 'completed',
     );
     addTransaction(transaction);
@@ -34,13 +35,49 @@ class TransactionProvider with ChangeNotifier {
 
   void sellCredits(double amount) {
     // Simulate selling credits
+    final now = DateTime.now();
     final transaction = Transaction(
-      id: DateTime.now().toString(),
+      id: now.millisecondsSinceEpoch.toString(),
       amount: amount,
       type: 'sell',
-      date: DateTime.now().toIso8601String(),
+      date: now.toIso8601String(),
       status: 'completed',
     );
     addTransaction(transaction);
+  }
+  
+  // Add some sample transactions for demo purposes
+  void addSampleTransactions() {
+    final now = DateTime.now();
+    final sampleTransactions = [
+      Transaction(
+        id: '${now.millisecondsSinceEpoch - 86400000}',
+        amount: 150.0,
+        type: 'buy',
+        date: now.subtract(const Duration(days: 1)).toIso8601String(),
+        status: 'completed',
+      ),
+      Transaction(
+        id: '${now.millisecondsSinceEpoch - 172800000}',
+        amount: 75.0,
+        type: 'sell',
+        date: now.subtract(const Duration(days: 2)).toIso8601String(),
+        status: 'completed',
+      ),
+      Transaction(
+        id: '${now.millisecondsSinceEpoch - 259200000}',
+        amount: 200.0,
+        type: 'buy',
+        date: now.subtract(const Duration(days: 3)).toIso8601String(),
+        status: 'pending',
+      ),
+    ];
+    
+    for (final transaction in sampleTransactions) {
+      if (!_transactions.any((t) => t.id == transaction.id)) {
+        _transactions.add(transaction);
+      }
+    }
+    notifyListeners();
   }
 }

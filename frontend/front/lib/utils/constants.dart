@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 const String appName = 'NeeLedger';
-const String apiBaseUrl = 'https://api.bluecarbonbazaar.com';
+const String apiBaseUrl = 'https://api.NeeLedger.com';
 
 const double defaultPadding = 16.0;
 const double defaultBorderRadius = 8.0;

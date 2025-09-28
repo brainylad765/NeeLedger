@@ -1,6 +1,6 @@
 # front
 
-BlueCarbonBazaar frontend (modified)
+NeeLedger frontend (modified)
 
 This project has been updated to include a mobile-first UI and a Profile screen with:
 

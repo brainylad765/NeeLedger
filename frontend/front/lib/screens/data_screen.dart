@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
 import '../widgets/custom_button.dart';
+import '../providers/upload_provider.dart';
+import '../providers/evidence_provider.dart';
 
 class DataScreen extends StatefulWidget {
   static const String routeName = '/data';
@@ -16,21 +20,67 @@ class _DataScreenState extends State<DataScreen> {
   bool _isUploading = false;
   bool _hasPermissions = false;
   String _uploadStatus = '';
-  List<String> _uploadedFiles = [];
 
   @override
   void initState() {
     super.initState();
     _checkPermissions();
+    _getCurrentLocation();
   }
 
   Future<void> _checkPermissions() async {
     final storageStatus = await Permission.storage.status;
-    final locationStatus = await Permission.location.status;
+    LocationPermission locationPermission = await Geolocator.checkPermission();
+    final locationStatus =
+        locationPermission == LocationPermission.always ||
+        locationPermission == LocationPermission.whileInUse;
 
     setState(() {
-      _hasPermissions = storageStatus.isGranted && locationStatus.isGranted;
+      _hasPermissions = storageStatus.isGranted && locationStatus;
     });
+  }
+
+  Future<void> _getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        _showLocationDialog();
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      _showLocationDialog();
+      return;
+    }
+
+    // Permission granted, no need to get position since this is data upload screen
+  }
+
+  Future<void> _showLocationDialog() async {
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Location Access Required'),
+        content: const Text(
+          'Location access is required for data uploads. Please enable it in settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              openAppSettings();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _requestPermissions() async {
@@ -44,7 +94,9 @@ class _DataScreenState extends State<DataScreen> {
     if (!_hasPermissions) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Storage and Location permissions are required for data upload'),
+          content: Text(
+            'Storage and Location permissions are required for data upload',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -66,25 +118,40 @@ class _DataScreenState extends State<DataScreen> {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['csv', 'xlsx', 'xls', 'json', 'pdf'],
+        allowMultiple: true,
       );
 
-      if (result != null) {
+      if (result != null && result.files.isNotEmpty) {
         setState(() {
-          _uploadStatus = 'Uploading file...';
+          _uploadStatus = 'Uploading files...';
         });
 
-        // Simulate upload process
-        await Future.delayed(const Duration(seconds: 2));
+        final provider = Provider.of<UploadProvider>(context, listen: false);
+        for (final file in result.files) {
+          await provider.addPdf(file);
+        }
+        
+        // Also sync to Evidence Provider for cross-platform compatibility
+        final evidenceProvider = Provider.of<EvidenceProvider>(context, listen: false);
+        for (final file in result.files) {
+          if (file.bytes != null) {
+            await evidenceProvider.addPdfEvidence(
+              fileName: file.name,
+              fileBytes: file.bytes!,
+            );
+          }
+        }
 
         setState(() {
-          _uploadedFiles.add(result.files.single.name);
-          _uploadStatus = 'File uploaded successfully!';
+          _uploadStatus = 'Files uploaded successfully!';
           _isUploading = false;
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('File ${result.files.single.name} uploaded successfully'),
+            content: Text(
+              '${result.files.length} file(s) uploaded successfully',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -197,10 +264,7 @@ class _DataScreenState extends State<DataScreen> {
                     const SizedBox(height: 12),
                     const Text(
                       'Storage and Location permissions are required to upload data files to our real-time cloud service.',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                     const SizedBox(height: 16),
                     if (!_hasPermissions)
@@ -227,28 +291,43 @@ class _DataScreenState extends State<DataScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Upload Data Files',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+              Consumer<UploadProvider>(
+                builder: (context, provider, child) {
+                  final hasUploads = provider.pdfs.isNotEmpty || provider.images.isNotEmpty;
+                  return Text(
+                    hasUploads 
+                        ? 'Upload your monitoring documents here'
+                        : 'Upload your PDD projects to initiate',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
+                  );
+                },
+              ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Supported formats: CSV, Excel (.xlsx, .xls), JSON, PDF',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
-                    ),
+              Consumer<UploadProvider>(
+                builder: (context, provider, child) {
+                  final hasUploads = provider.pdfs.isNotEmpty || provider.images.isNotEmpty;
+                  return Text(
+                    hasUploads
+                        ? 'Upload monitoring documents, reports, and additional project files'
+                        : 'Supported formats: CSV, Excel (.xlsx, .xls), JSON, PDF - Upload your initial PDD documents',
+                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  );
+                },
+              ),
                     const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       child: CustomButton(
-                        text: _isUploading ? 'Uploading...' : 'Select & Upload File',
-                        onPressed: _hasPermissions ? _pickAndUploadFileSync : () {},
+                        text: _isUploading
+                            ? 'Uploading...'
+                            : 'Select & Upload File',
+                        onPressed: _hasPermissions
+                            ? _pickAndUploadFileSync
+                            : () {},
                       ),
                     ),
                     if (_uploadStatus.isNotEmpty)
@@ -260,8 +339,8 @@ class _DataScreenState extends State<DataScreen> {
                             color: _uploadStatus.contains('failed')
                                 ? Colors.red
                                 : _uploadStatus.contains('successfully')
-                                    ? Colors.green
-                                    : Colors.blue,
+                                ? Colors.green
+                                : Colors.blue,
                             fontSize: 14,
                           ),
                         ),
@@ -273,66 +352,87 @@ class _DataScreenState extends State<DataScreen> {
               const SizedBox(height: 32),
 
               // Upload History
-              if (_uploadedFiles.isNotEmpty) ...[
-                const Text(
-                  'Recent Uploads',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ListView.builder(
-                  itemCount: _uploadedFiles.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1E1E1E),
-                        borderRadius: BorderRadius.circular(8),
+              Consumer<UploadProvider>(
+                builder: (context, provider, child) {
+                  if (provider.pdfs.isEmpty) return const SizedBox.shrink();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Recent Uploads',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.file_present,
-                            color: Color(0xFF0D47A1),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _uploadedFiles[index],
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
+                      const SizedBox(height: 16),
+                      ListView.builder(
+                        itemCount: provider.pdfs.length,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          final pdf = provider.pdfs[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4CAF50).withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
+                              color: const Color(0xFF1E1E1E),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text(
-                              'Uploaded',
-                              style: TextStyle(
-                                color: Color(0xFF4CAF50),
-                                fontSize: 12,
-                              ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.file_present,
+                                  color: Color(0xFF0D47A1),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    pdf.name,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${(pdf.size / 1024).toStringAsFixed(1)} KB',
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF4CAF50,
+                                    ).withValues(alpha: 51),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    'Uploaded',
+                                    style: TextStyle(
+                                      color: Color(0xFF4CAF50),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-              ],
+                    ],
+                  );
+                },
+              ),
 
               const SizedBox(height: 32),
 
@@ -343,7 +443,7 @@ class _DataScreenState extends State<DataScreen> {
                   color: const Color(0xFF1E1E1E),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: const Color(0xFF0D47A1).withOpacity(0.3),
+                    color: const Color(0xFF0D47A1).withValues(alpha: 77),
                   ),
                 ),
                 child: Column(
@@ -361,8 +461,16 @@ class _DataScreenState extends State<DataScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _buildSyncStatus('Firebase', 'Connected', Colors.green),
-                        _buildSyncStatus('Cloud Storage', 'Active', Colors.blue),
-                        _buildSyncStatus('Real-time DB', 'Syncing', Colors.orange),
+                        _buildSyncStatus(
+                          'Cloud Storage',
+                          'Active',
+                          Colors.blue,
+                        ),
+                        _buildSyncStatus(
+                          'Real-time DB',
+                          'Syncing',
+                          Colors.orange,
+                        ),
                       ],
                     ),
                   ],
@@ -380,16 +488,13 @@ class _DataScreenState extends State<DataScreen> {
       children: [
         Text(
           service,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 12),
         ),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 51),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: color),
           ),

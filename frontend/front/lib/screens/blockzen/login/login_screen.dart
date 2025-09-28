@@ -24,7 +24,7 @@ class _BlockZenLoginScreenState extends State<BlockZenLoginScreen> {
     'Project Developer',
     'Credit Buyer',
     'Verifier',
-    'Administrator'
+    'Administrator',
   ];
 
   @override
@@ -47,8 +47,8 @@ class _BlockZenLoginScreenState extends State<BlockZenLoginScreen> {
                   color: const Color(0xFF0D47A1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Icon(
-                  Icons.eco,
+                child: ImageIcon(
+                  AssetImage('assets/images/logo.png'),
                   color: Colors.white,
                   size: 40,
                 ),
@@ -65,10 +65,7 @@ class _BlockZenLoginScreenState extends State<BlockZenLoginScreen> {
               const SizedBox(height: 8),
               Text(
                 'Carbon Credit Marketplace',
-                style: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.grey[400], fontSize: 16),
               ),
               const SizedBox(height: 60),
 
@@ -97,10 +94,7 @@ class _BlockZenLoginScreenState extends State<BlockZenLoginScreen> {
                     underline: Container(),
                     isExpanded: true,
                     items: _roles.map((role) {
-                      return DropdownMenuItem(
-                        value: role,
-                        child: Text(role),
-                      );
+                      return DropdownMenuItem(value: role, child: Text(role));
                     }).toList(),
                     onChanged: (value) {
                       setState(() {
@@ -130,7 +124,9 @@ class _BlockZenLoginScreenState extends State<BlockZenLoginScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF0D47A1)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF0D47A1),
+                          ),
                         ),
                       ),
                       style: const TextStyle(color: Colors.white),
@@ -156,7 +152,9 @@ class _BlockZenLoginScreenState extends State<BlockZenLoginScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF0D47A1)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF0D47A1),
+                          ),
                         ),
                       ),
                       style: const TextStyle(color: Colors.white),
@@ -173,10 +171,10 @@ class _BlockZenLoginScreenState extends State<BlockZenLoginScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: CustomButton(
-                      text: _isLoading
-                        ? 'Please wait...'
-                        : (_isLogin ? 'Login' : 'Sign Up'),
-                      onPressed: _isLoading ? () {} : _handleSubmitSync,
+                        text: _isLoading
+                            ? 'Please wait...'
+                            : (_isLogin ? 'Login' : 'Sign Up'),
+                        onPressed: _isLoading ? () {} : _handleSubmitSync,
                       ),
                     ),
                   ],
@@ -245,6 +243,7 @@ class _BlockZenLoginScreenState extends State<BlockZenLoginScreen> {
         // Mock successful login
         final success = await userProvider.login(
           email: _emailController.text,
+          password: _passwordController.text,
           role: _selectedRole,
         );
 
@@ -268,9 +267,9 @@ class _BlockZenLoginScreenState extends State<BlockZenLoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
       if (mounted) {

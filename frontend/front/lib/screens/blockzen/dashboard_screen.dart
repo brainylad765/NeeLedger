@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
+import '../profile_screen.dart';
 
 class BlockZenDashboardScreen extends StatefulWidget {
   static const String routeName = '/blockzen/dashboard';
@@ -8,7 +9,8 @@ class BlockZenDashboardScreen extends StatefulWidget {
   const BlockZenDashboardScreen({super.key});
 
   @override
-  State<BlockZenDashboardScreen> createState() => _BlockZenDashboardScreenState();
+  State<BlockZenDashboardScreen> createState() =>
+      _BlockZenDashboardScreenState();
 }
 
 class _BlockZenDashboardScreenState extends State<BlockZenDashboardScreen> {
@@ -19,7 +21,7 @@ class _BlockZenDashboardScreenState extends State<BlockZenDashboardScreen> {
     const BlockZenWalletScreen(),
     const BlockZenHomeScreen(),
     const BlockZenMarketplaceScreen(),
-    const BlockZenProfileScreen(),
+    const ProfileScreen(),
   ];
 
   final List<BottomNavigationBarItem> _navItems = [
@@ -32,26 +34,19 @@ class _BlockZenDashboardScreenState extends State<BlockZenDashboardScreen> {
       label: 'Wallet',
     ),
     const BottomNavigationBarItem(
-      icon: Icon(
-        Icons.home,
-        size: 32,
-      ),
+      icon: Icon(Icons.home, size: 32),
       label: 'Home',
     ),
     const BottomNavigationBarItem(
       icon: Icon(Icons.storefront),
       label: 'Market',
     ),
-    const BottomNavigationBarItem(
-      icon: Icon(Icons.person),
-      label: 'Profile',
-    ),
+    const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
   ];
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
-    final user = userProvider.currentUser;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F1416),
@@ -61,7 +56,7 @@ class _BlockZenDashboardScreenState extends State<BlockZenDashboardScreen> {
           color: const Color(0xFF1E1E1E),
           border: Border(
             top: BorderSide(
-              color: const Color(0xFF0D47A1).withOpacity(0.3),
+              color: const Color(0xFF0D47A1).withValues(alpha: 77),
               width: 1,
             ),
           ),
@@ -149,7 +144,7 @@ class BlockZenHomeScreen extends StatelessWidget {
                       Text(
                         'Role: ${user?.role ?? 'Project Developer'}',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 204),
                           fontSize: 16,
                         ),
                       ),
@@ -235,7 +230,11 @@ class BlockZenHomeScreen extends StatelessWidget {
                     Icons.assignment,
                     () {
                       // Navigate to projects tab
-                      final dashboardState = context.findAncestorStateOfType<_BlockZenDashboardScreenState>();
+                      final dashboardState = context
+                          .findAncestorStateOfType<
+                            _BlockZenDashboardScreenState
+                          >();
+                      // ignore: invalid_use_of_protected_member
                       dashboardState?.setState(() {
                         dashboardState._selectedIndex = 0;
                       });
@@ -250,7 +249,11 @@ class BlockZenHomeScreen extends StatelessWidget {
                     Icons.storefront,
                     () {
                       // Navigate to marketplace tab
-                      final dashboardState = context.findAncestorStateOfType<_BlockZenDashboardScreenState>();
+                      final dashboardState = context
+                          .findAncestorStateOfType<
+                            _BlockZenDashboardScreenState
+                          >();
+                      // ignore: invalid_use_of_protected_member
                       dashboardState?.setState(() {
                         dashboardState._selectedIndex = 3;
                       });
@@ -265,18 +268,29 @@ class BlockZenHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 77)),
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 32),
+            icon == Icons.eco
+                ? ImageIcon(
+                    AssetImage('assets/images/logo.png'),
+                    color: color,
+                    size: 32,
+                  )
+                : Icon(icon, color: color, size: 32),
             const SizedBox(height: 8),
             Text(
               value,
@@ -289,10 +303,7 @@ class BlockZenHomeScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               title,
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.grey[400], fontSize: 12),
               textAlign: TextAlign.center,
             ),
           ],
@@ -301,7 +312,12 @@ class BlockZenHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionCard(String title, String subtitle, IconData icon, VoidCallback onTap) {
+  Widget _buildActionCard(
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -309,7 +325,9 @@ class BlockZenHomeScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF0D47A1).withOpacity(0.3)),
+          border: Border.all(
+            color: const Color(0xFF0D47A1).withValues(alpha: 77),
+          ),
         ),
         child: Column(
           children: [
@@ -326,10 +344,7 @@ class BlockZenHomeScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.grey[400], fontSize: 12),
               textAlign: TextAlign.center,
             ),
           ],
@@ -350,10 +365,7 @@ class BlockZenProjectsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Projects',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Projects', style: TextStyle(color: Colors.white)),
       ),
       body: const Center(
         child: Text(
@@ -376,10 +388,7 @@ class BlockZenMarketplaceScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Marketplace',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Marketplace', style: TextStyle(color: Colors.white)),
       ),
       body: const Center(
         child: Text(
@@ -402,10 +411,7 @@ class BlockZenWalletScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Wallet',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Wallet', style: TextStyle(color: Colors.white)),
       ),
       body: const Center(
         child: Text(
@@ -428,10 +434,7 @@ class BlockZenProfileScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Profile',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Profile', style: TextStyle(color: Colors.white)),
       ),
       body: const Center(
         child: Text(

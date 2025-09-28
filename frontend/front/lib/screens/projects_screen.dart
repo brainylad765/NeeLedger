@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_button.dart';
+import 'project_details_screen.dart';
 
 class ProjectsScreen extends StatefulWidget {
   static const String routeName = '/projects';
@@ -15,27 +16,29 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     {
       'id': '1',
       'name': 'Solar Farm Initiative',
-      'location': 'California, USA',
+      'location': 'Mahandi Delta, Odisha',
       'status': 'Active',
       'progress': 0.85,
       'carbonCredits': 1250000,
       'startDate': '2023-01-15',
       'endDate': '2025-12-31',
-      'description': 'Large-scale solar installation project generating renewable energy and carbon credits.',
+      'description':
+          'Large-scale solar installation project generating renewable energy and carbon credits.',
       'investors': 45,
       'totalValue': 25000000,
       'type': 'Renewable Energy',
     },
     {
       'id': '2',
-      'name': 'Amazon Rainforest Conservation',
-      'location': 'Amazonas, Brazil',
+      'name': 'Kutch Conservation',
+      'location': 'Gulf of Kutch, Gujrat',
       'status': 'Active',
       'progress': 0.92,
       'carbonCredits': 850000,
       'startDate': '2022-06-01',
       'endDate': '2032-05-31',
-      'description': 'Protecting 500,000 hectares of pristine rainforest from deforestation.',
+      'description':
+          'Protecting 500,000 hectares of pristine rainforest from deforestation.',
       'investors': 128,
       'totalValue': 15000000,
       'type': 'Conservation',
@@ -43,13 +46,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     {
       'id': '3',
       'name': 'Wind Energy Project',
-      'location': 'Texas, USA',
+      'location': 'Bhitarkanika',
       'status': 'Planning',
       'progress': 0.25,
       'carbonCredits': 600000,
       'startDate': '2024-03-01',
       'endDate': '2026-02-28',
-      'description': 'Offshore wind farm development with advanced turbine technology.',
+      'description':
+          'Offshore wind farm development with advanced turbine technology.',
       'investors': 23,
       'totalValue': 18000000,
       'type': 'Renewable Energy',
@@ -57,13 +61,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     {
       'id': '4',
       'name': 'Ocean Cleanup Initiative',
-      'location': 'Pacific Ocean',
+      'location': 'Indian Ocean',
       'status': 'Active',
       'progress': 0.67,
       'carbonCredits': 450000,
       'startDate': '2023-09-01',
       'endDate': '2025-08-31',
-      'description': 'Removing plastic pollution from ocean gyres to restore marine ecosystems.',
+      'description':
+          'Removing plastic pollution from ocean gyres to restore marine ecosystems.',
       'investors': 67,
       'totalValue': 12000000,
       'type': 'Environmental Cleanup',
@@ -71,13 +76,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     {
       'id': '5',
       'name': 'Urban Reforestation Program',
-      'location': 'New York, USA',
+      'location': 'Sunderbans, W.B.',
       'status': 'Completed',
       'progress': 1.0,
       'carbonCredits': 125000,
       'startDate': '2021-04-01',
       'endDate': '2023-03-31',
-      'description': 'Planting 50,000 trees across urban areas to improve air quality.',
+      'description':
+          'Planting 50,000 trees across urban areas to improve air quality.',
       'investors': 89,
       'totalValue': 5000000,
       'type': 'Reforestation',
@@ -91,7 +97,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   Widget build(BuildContext context) {
     final filteredProjects = _selectedFilter == 'All'
         ? _projects
-        : _projects.where((project) => project['status'] == _selectedFilter).toList();
+        : _projects
+              .where((project) => project['status'] == _selectedFilter)
+              .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F1416),
@@ -152,7 +160,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                         selectedColor: const Color(0xFF0D47A1),
                         checkmarkColor: Colors.white,
                         labelStyle: TextStyle(
-                          color: _selectedFilter == filter ? Colors.white : Colors.grey,
+                          color: _selectedFilter == filter
+                              ? Colors.white
+                              : Colors.grey,
                         ),
                       ),
                     );
@@ -182,7 +192,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   color: const Color(0xFF1E1E1E),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: const Color(0xFF0D47A1).withOpacity(0.3),
+                    color: const Color(0xFF0D47A1).withValues(alpha: 77),
                   ),
                 ),
                 child: Column(
@@ -249,7 +259,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _getStatusColor(project['status']).withOpacity(0.3),
+          color: _getStatusColor(project['status']).withValues(alpha: 77),
         ),
       ),
       child: Column(
@@ -293,9 +303,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(project['status']).withOpacity(0.2),
+                  color: _getStatusColor(
+                    project['status'],
+                  ).withValues(alpha: 51),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: _getStatusColor(project['status'])),
                 ),
@@ -322,10 +337,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 children: [
                   const Text(
                     'Progress',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 14),
                   ),
                   Text(
                     '${((project['progress'] as double) * 100).toInt()}%',
@@ -382,10 +394,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           // Description
           Text(
             project['description'],
-            style: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey[400], fontSize: 14),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -397,9 +406,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             children: [
               Expanded(
                 child: CustomButton(
-                  text: 'View Details',
+                  text: 'More Info',
                   onPressed: () {
-                    _showProjectDetails(project);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ProjectDetailsScreen(project: project),
+                      ),
+                    );
                   },
                   backgroundColor: const Color(0xFF0D47A1),
                 ),
@@ -424,7 +437,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   Widget _buildDetailItem(String label, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, color: const Color(0xFF0D47A1), size: 20),
+        icon == Icons.eco
+            ? ImageIcon(
+                AssetImage('assets/images/logo.png'),
+                color: const Color(0xFF0D47A1),
+                size: 20,
+              )
+            : Icon(icon, color: const Color(0xFF0D47A1), size: 20),
         const SizedBox(height: 4),
         Text(
           value,
@@ -434,29 +453,34 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[400],
-            fontSize: 12,
-          ),
-        ),
+        Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 12)),
       ],
     );
   }
 
-  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
+  Widget _buildSummaryCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 77)),
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 24),
+            icon == Icons.eco
+                ? ImageIcon(
+                    AssetImage('assets/images/logo.png'),
+                    color: color,
+                    size: 24,
+                  )
+                : Icon(icon, color: color, size: 24),
             const SizedBox(height: 8),
             Text(
               value,
@@ -468,10 +492,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             ),
             Text(
               title,
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.grey[400], fontSize: 12),
               textAlign: TextAlign.center,
             ),
           ],
@@ -493,53 +514,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     }
   }
 
-  void _showProjectDetails(Map<String, dynamic> project) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                project['name'],
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                project['description'],
-                style: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 24),
-              _buildDetailRow('Location', project['location']),
-              _buildDetailRow('Status', project['status']),
-              _buildDetailRow('Type', project['type']),
-              _buildDetailRow('Start Date', project['startDate']),
-              _buildDetailRow('End Date', project['endDate']),
-              _buildDetailRow('Carbon Credits', '${project['carbonCredits'] ~/ 1000}K tonnes'),
-              _buildDetailRow('Investors', '${project['investors']}'),
-              _buildDetailRow('Total Value', '\$${(project['totalValue'] as int) ~/ 1000000}M'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // Removed _showProjectDetails - now using ProjectDetailsScreen for full window view
 
   void _showInvestmentDialog(Map<String, dynamic> project) {
     showDialog(
@@ -591,29 +566,5 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '$label:',
-            style: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 14,
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Removed unused _buildDetailRow method - now using ProjectDetailsScreen
 }

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 class UserProvider with ChangeNotifier {
@@ -32,20 +35,31 @@ class UserProvider with ChangeNotifier {
   }
 
   // BlockZen specific methods
-  Future<bool> login({required String email, required String role}) async {
+  Future<bool> login({
+    required String email,
+    required String password,
+    required String role,
+  }) async {
     try {
-      // TODO: Implement actual login with Firebase/Django
-      await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+      final userCredential = await firebase_auth.FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
 
-      // Mock user creation
+      // Fetch user data from Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+      final userData = userDoc.data()!;
+
       final user = User(
-        id: '1',
-        name: email.split('@')[0],
+        id: userCredential.user!.uid,
+        name: userData['name'] ?? 'User',
         email: email,
-        walletAddress: '0x${DateTime.now().millisecondsSinceEpoch.toString()}',
-        credits: 1000.0,
-        role: role,
-        memberSince: DateTime.now(),
+        walletAddress:
+            userData['walletAddress'] ?? '0x${userCredential.user!.uid}',
+        credits: (userData['credits'] ?? 1000.0).toDouble(),
+        role: userData['role'] ?? role,
+        memberSince: (userData['memberSince'] as Timestamp).toDate(),
       );
 
       _currentUser = user;
@@ -60,17 +74,30 @@ class UserProvider with ChangeNotifier {
     required String email,
     required String password,
     required String role,
+    String? name,
   }) async {
     try {
-      // TODO: Implement actual signup with Firebase/Django
-      await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+      final userCredential = await firebase_auth.FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
 
-      // Mock user creation
+      // Save user data to Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
+            'name': name ?? 'User',
+            'email': email,
+            'walletAddress': '0x${userCredential.user!.uid}',
+            'credits': 1000.0,
+            'role': role,
+            'memberSince': Timestamp.now(),
+          });
+
       final user = User(
-        id: '1',
-        name: email.split('@')[0],
+        id: userCredential.user!.uid,
+        name: name ?? 'User',
         email: email,
-        walletAddress: '0x${DateTime.now().millisecondsSinceEpoch.toString()}',
+        walletAddress: '0x${userCredential.user!.uid}',
         credits: 1000.0,
         role: role,
         memberSince: DateTime.now(),

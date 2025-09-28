@@ -4,6 +4,7 @@ class Evidence {
   final double? latitude;
   final double? longitude;
   final DateTime timestamp;
+  final List<Map<String, dynamic>>? detections;
 
   Evidence({
     required this.id,
@@ -11,5 +12,6 @@ class Evidence {
     this.latitude,
     this.longitude,
     DateTime? timestamp,
+    this.detections,
   }) : timestamp = timestamp ?? DateTime.now();
 }

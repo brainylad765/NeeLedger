@@ -72,7 +72,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'BlueCarbonBazaar',
+                  'NeeLedger',
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 24,
@@ -96,9 +96,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       child: OutlinedButton(
                         onPressed: () => _selectRole('Project Proponent'),
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: _selectedRole == 'Project Proponent' ? accentColor.withOpacity(0.2) : Colors.transparent,
+                          backgroundColor: _selectedRole == 'Project Proponent'
+                              ? accentColor.withValues(alpha: 51)
+                              : Colors.transparent,
                           side: BorderSide(
-                            color: _selectedRole == 'Project Proponent' ? accentColor : Colors.white54,
+                            color: _selectedRole == 'Project Proponent'
+                                ? accentColor
+                                : Colors.white54,
                             width: 2,
                           ),
                           shape: RoundedRectangleBorder(
@@ -109,7 +113,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         child: Text(
                           'Project Proponent',
                           style: GoogleFonts.poppins(
-                            color: _selectedRole == 'Project Proponent' ? accentColor : Colors.white70,
+                            color: _selectedRole == 'Project Proponent'
+                                ? accentColor
+                                : Colors.white70,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -120,9 +126,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       child: OutlinedButton(
                         onPressed: () => _selectRole('Retailer'),
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: _selectedRole == 'Retailer' ? accentColor.withOpacity(0.2) : Colors.transparent,
+                          backgroundColor: _selectedRole == 'Retailer'
+                              ? accentColor.withValues(alpha: 51)
+                              : Colors.transparent,
                           side: BorderSide(
-                            color: _selectedRole == 'Retailer' ? accentColor : Colors.white54,
+                            color: _selectedRole == 'Retailer'
+                                ? accentColor
+                                : Colors.white54,
                             width: 2,
                           ),
                           shape: RoundedRectangleBorder(
@@ -133,7 +143,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         child: Text(
                           'Retailer',
                           style: GoogleFonts.poppins(
-                            color: _selectedRole == 'Retailer' ? accentColor : Colors.white70,
+                            color: _selectedRole == 'Retailer'
+                                ? accentColor
+                                : Colors.white70,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -158,7 +170,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       borderSide: BorderSide.none,
                     ),
                   ),
-                  validator: (value) => value == null || value.isEmpty ? 'Full Name is required' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Full Name is required'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -178,9 +192,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Email is required';
+                    if (value == null || value.isEmpty)
+                      return 'Email is required';
                     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                    if (!emailRegex.hasMatch(value)) return 'Enter a valid email';
+                    if (!emailRegex.hasMatch(value))
+                      return 'Enter a valid email';
                     return null;
                   },
                 ),
@@ -201,7 +217,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                   keyboardType: TextInputType.phone,
-                  validator: (value) => value == null || value.isEmpty ? 'Mobile Number is required' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Mobile Number is required'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -237,7 +255,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                   obscureText: true,
-                  validator: (value) => value == null || value.isEmpty ? 'Password is required' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Password is required'
+                      : null,
                 ),
                 const SizedBox(height: 24),
                 SizedBox(

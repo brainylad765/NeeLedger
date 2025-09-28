@@ -18,25 +18,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const HomeScreen(),
     const DataScreen(),
     const ProjectsScreen(),
+    const HomeScreen(),
     const WalletScreen(),
     const ProfileScreen(),
   ];
 
   final List<String> _titles = [
-    'Home',
     'Data',
     'Projects',
+    'HOME',
     'Wallet',
     'Profile',
   ];
 
   final List<IconData> _icons = [
-    Icons.home,
     Icons.cloud_upload,
     Icons.business_center,
+    Icons.home,
     Icons.account_balance_wallet,
     Icons.person,
   ];
@@ -51,7 +51,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           color: const Color(0xFF1E1E1E),
           border: Border(
             top: BorderSide(
-              color: const Color(0xFF0D47A1).withOpacity(0.3),
+              color: const Color(0xFF0D47A1).withValues(alpha: 77),
               width: 1,
             ),
           ),

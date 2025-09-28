@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_button.dart';
 
 class HomeScreen extends StatefulWidget {
   static const String routeName = '/home';
@@ -42,16 +41,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 51),
                                 blurRadius: 10,
                                 offset: const Offset(0, 5),
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.eco,
-                            color: Color(0xFF0D47A1),
-                            size: 50,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
 
@@ -59,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         // Company Title
                         const Text(
-                          'BlueCarbonBazaar',
+                          'NeeLedger',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 32,
@@ -72,44 +73,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         // Company Description
                         const Text(
                           'Building Trust in Climate Action',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
+                          style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
 
                         const SizedBox(height: 8),
 
                         const Text(
                           'Leading the way in carbon credit verification and trading',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
 
                         const SizedBox(height: 8),
 
                         const Text(
                           'Empowering organizations to make a real environmental impact',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
 
-                        const SizedBox(height: 40),
-
-                        // Get Started Button
-                        SizedBox(
-                          width: double.infinity,
-                          child: CustomButton(
-                            text: 'Get Started',
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/main');
-                            },
-                          ),
-                        ),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -129,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(25),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 51),
                               blurRadius: 10,
                               offset: const Offset(0, 5),
                             ),
@@ -172,10 +153,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
 
                     // Project List
-                    _buildProjectItem('Solar Farm Initiative', 'Active', '1.2M tonnes CO₂'),
-                    _buildProjectItem('Reforestation Program', 'Active', '850K tonnes CO₂'),
-                    _buildProjectItem('Wind Energy Project', 'Passive', '600K tonnes CO₂'),
-                    _buildProjectItem('Ocean Cleanup Initiative', 'Active', '450K tonnes CO₂'),
+                    _buildProjectItem(
+                      'Solar Farm Initiative',
+                      'Active',
+                      '1.2M tonnes CO₂',
+                    ),
+                    _buildProjectItem(
+                      'Reforestation Program',
+                      'Active',
+                      '850K tonnes CO₂',
+                    ),
+                    _buildProjectItem(
+                      'Wind Energy Project',
+                      'Passive',
+                      '600K tonnes CO₂',
+                    ),
+                    _buildProjectItem(
+                      'Ocean Cleanup Initiative',
+                      'Active',
+                      '450K tonnes CO₂',
+                    ),
 
                     const SizedBox(height: 32),
 
@@ -251,10 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           const Text(
                             'Have questions about our platform or carbon credit projects?',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 16,
-                            ),
+                            style: TextStyle(color: Colors.grey, fontSize: 16),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 16),
@@ -264,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icon(Icons.email, color: const Color(0xFF0D47A1)),
                               const SizedBox(width: 8),
                               const Text(
-                                'contact@bluecarbonbazaar.com',
+                                'contact@NeeLedger.com',
                                 style: TextStyle(
                                   color: Color(0xFF0D47A1),
                                   fontSize: 16,
@@ -312,10 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 4),
                 Text(
                   carbonAmount,
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey[400], fontSize: 14),
                 ),
               ],
             ),
@@ -324,8 +315,8 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: status == 'Active'
-                  ? const Color(0xFF4CAF50).withOpacity(0.2)
-                  : const Color(0xFFFF9800).withOpacity(0.2),
+                  ? const Color(0xFF4CAF50).withValues(alpha: 51)
+                  : const Color(0xFFFF9800).withValues(alpha: 51),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: status == 'Active'
@@ -349,14 +340,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTotalCard(String title, String value, IconData icon, Color color) {
+  Widget _buildTotalCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 77)),
         ),
         child: Column(
           children: [
@@ -373,10 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 4),
             Text(
               title,
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.grey[400], fontSize: 12),
               textAlign: TextAlign.center,
             ),
           ],

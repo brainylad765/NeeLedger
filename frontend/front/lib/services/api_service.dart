@@ -4,7 +4,8 @@ import '../models/user_model.dart';
 import '../models/transaction_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://api.bluecarbonbazaar.com'; // Replace with actual API URL
+  static const String baseUrl =
+      'https://api.NeeLedger.com'; // Replace with actual API URL
 
   Future<User> loginUser(String email, String password) async {
     final response = await http.post(
@@ -56,7 +57,10 @@ class ApiService {
     }
   }
 
-  Future<void> uploadDocumentMetadata(String downloadURL, String fileName) async {
+  Future<void> uploadDocumentMetadata(
+    String downloadURL,
+    String fileName,
+  ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/upload-document'),
       headers: {'Content-Type': 'application/json'},

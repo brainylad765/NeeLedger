@@ -17,12 +17,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   // Timings
   static const Duration _initialHold = Duration(seconds: 1);
   static const Duration _logoSlideDuration = Duration(milliseconds: 900);
-  static const Duration _postAboutHold = Duration(seconds: 2); // wait 2s after about completes
+  static const Duration _postAboutHold = Duration(
+    seconds: 2,
+  ); // wait 2s after about completes
 
   late final AnimationController _logoController;
   late final Animation<Offset> _logoOffset;
   late final Animation<double> _logoScale;
-  late final Animation<double> _headerTopPadding; // will animate top padding to create space
+  late final Animation<double>
+  _headerTopPadding; // will animate top padding to create space
 
   // Typing animation content (single sentence)
   final String _aboutText =
@@ -33,7 +36,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   bool _skipped = false;
 
   // Typing config
-  final Duration _typingInterval = const Duration(milliseconds: 40); // speed per tick
+  final Duration _typingInterval = const Duration(
+    milliseconds: 40,
+  ); // speed per tick
 
   @override
   void initState() {
@@ -48,15 +53,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     );
 
     // Slide from center (Offset.zero) up a modest amount but also animate scale and top padding
-    _logoOffset = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, -0.22),
-    ).animate(CurvedAnimation(parent: _logoController, curve: Curves.easeOutCubic));
+    _logoOffset = Tween<Offset>(begin: Offset.zero, end: const Offset(0, -0.22))
+        .animate(
+          CurvedAnimation(parent: _logoController, curve: Curves.easeOutCubic),
+        );
 
     // Slight scale down when moving up to emphasize "initializing" effect
-    _logoScale = Tween<double>(begin: 1.0, end: 0.92).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeOut),
-    );
+    _logoScale = Tween<double>(
+      begin: 1.0,
+      end: 0.92,
+    ).animate(CurvedAnimation(parent: _logoController, curve: Curves.easeOut));
 
     // We will animate a top padding value from center placement to a fixed top gap.
     // This is used to ensure the header block doesn't slide off-screen; instead it creates space below.
@@ -161,7 +167,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           child: AnimatedBuilder(
             animation: _logoController,
             builder: (context, child) {
-              final topPadding = _headerTopPadding.value + MediaQuery.of(context).padding.top;
+              final topPadding =
+                  _headerTopPadding.value + MediaQuery.of(context).padding.top;
               return Container(
                 width: double.infinity,
                 height: double.infinity,
@@ -169,7 +176,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0xFF0D47A1), Color(0xFF1976D2), Color(0xFF42A5F5)],
+                    colors: [
+                      Color(0xFF0D47A1),
+                      Color(0xFF1976D2),
+                      Color(0xFF42A5F5),
+                    ],
                   ),
                 ),
                 child: Column(
@@ -194,12 +205,17 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                   Container(
                                     width: w * 0.35,
                                     height: w * 0.35,
-                                    constraints: const BoxConstraints(maxWidth: 180, maxHeight: 180),
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 180,
+                                      maxHeight: 180,
+                                    ),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(30),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.3),
+                                          color: Colors.black.withValues(
+                                            alpha: 77,
+                                          ),
                                           blurRadius: 20,
                                           offset: const Offset(0, 10),
                                         ),
@@ -210,15 +226,26 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                       child: Image.asset(
                                         'assets/images/logo.png',
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) => Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(30),
-                                          ),
-                                          child: Center(
-                                            child: Icon(Icons.eco, color: const Color(0xFF0D47A1), size: w * 0.18),
-                                          ),
-                                        ),
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          30,
+                                                        ),
+                                                  ),
+                                                  child: Center(
+                                                    child: Icon(
+                                                      Icons.image,
+                                                      color: const Color(
+                                                        0xFF0D47A1,
+                                                      ),
+                                                      size: w * 0.18,
+                                                    ),
+                                                  ),
+                                                ),
                                       ),
                                     ),
                                   ),
@@ -256,12 +283,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: w * 0.04),
                         child: Align(
-                          alignment: Alignment.topLeft, // start typing from left-most screen
+                          alignment: Alignment
+                              .topLeft, // start typing from left-most screen
                           child: SingleChildScrollView(
                             physics: const BouncingScrollPhysics(),
                             child: Container(
                               width: double.infinity,
-                              padding: EdgeInsets.only(top: h * 0.02, bottom: h * 0.04),
+                              padding: EdgeInsets.only(
+                                top: h * 0.02,
+                                bottom: h * 0.04,
+                              ),
                               child: Text(
                                 _showAbout ? _displayAbout : '',
                                 textAlign: TextAlign.left,
@@ -289,7 +320,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 38),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

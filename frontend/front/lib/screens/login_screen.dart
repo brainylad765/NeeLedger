@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import '../models/user_model.dart';
 import 'dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,10 +18,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController mobileController = TextEditingController();
-  final TextEditingController kybController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   bool isProjectProponent = true;
+  bool hasCompletedKYC = false;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'BlueCarbonBazaar',
+                'NeeLedger',
                 style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -77,17 +80,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: isProjectProponent ? const Color(0xFF0D47A1) : Colors.transparent,
+                          color: isProjectProponent
+                              ? const Color(0xFF0D47A1)
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: isProjectProponent ? const Color(0xFF0D47A1) : Colors.grey,
+                            color: isProjectProponent
+                                ? const Color(0xFF0D47A1)
+                                : Colors.grey,
                           ),
                         ),
                         alignment: Alignment.center,
                         child: Text(
                           'Project Proponent',
                           style: GoogleFonts.poppins(
-                            color: isProjectProponent ? Colors.white : Colors.grey,
+                            color: isProjectProponent
+                                ? Colors.white
+                                : Colors.grey,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -105,17 +114,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: !isProjectProponent ? Colors.grey[850] : Colors.transparent,
+                          color: !isProjectProponent
+                              ? Colors.grey[850]
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: !isProjectProponent ? Colors.grey[700]! : Colors.grey,
+                            color: !isProjectProponent
+                                ? Colors.grey[700]!
+                                : Colors.grey,
                           ),
                         ),
                         alignment: Alignment.center,
                         child: Text(
                           'Retailer',
                           style: GoogleFonts.poppins(
-                            color: !isProjectProponent ? Colors.white : Colors.grey,
+                            color: !isProjectProponent
+                                ? Colors.white
+                                : Colors.grey,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -125,21 +140,76 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              _buildTextField('Full Name *', 'Enter your full name', fullNameController),
+              _buildTextField(
+                'Full Name *',
+                'Enter your full name',
+                fullNameController,
+              ),
               const SizedBox(height: 16),
-              _buildTextField('Email *', 'Enter your email address', emailController, keyboardType: TextInputType.emailAddress),
+              _buildTextField(
+                'Email *',
+                'Enter your email address',
+                emailController,
+                keyboardType: TextInputType.emailAddress,
+              ),
               const SizedBox(height: 16),
-              _buildTextField('Mobile Number *', 'Enter your mobile number', mobileController, keyboardType: TextInputType.phone),
+              _buildTextField(
+                'Mobile Number *',
+                'Enter your mobile number',
+                mobileController,
+                keyboardType: TextInputType.phone,
+              ),
               const SizedBox(height: 16),
-              _buildTextField('KYB Registration Form Link', 'Enter KYB registration form link/etc,etc...', kybController),
+              _buildKYCButton(),
               const SizedBox(height: 16),
-              _buildTextField('Password *', 'Create a password', passwordController, obscureText: true),
+              _buildTextField(
+                'Password *',
+                'Create a password',
+                passwordController,
+                obscureText: true,
+              ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushReplacementNamed(context, DashboardScreen.routeName);
+                    if (fullNameController.text.isEmpty ||
+                        emailController.text.isEmpty ||
+                        mobileController.text.isEmpty ||
+                        passwordController.text.isEmpty ||
+                        !hasCompletedKYC) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Please fill all fields and complete KYC',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    final role = isProjectProponent
+                        ? 'Project Proponent'
+                        : 'Retailer';
+                    final mockUser = User(
+                      id: 'mock_${DateTime.now().millisecondsSinceEpoch}',
+                      name: fullNameController.text,
+                      email: emailController.text,
+                      mobile: mobileController.text,
+                      password: passwordController.text,
+                      walletAddress:
+                          '0xmock_${DateTime.now().millisecondsSinceEpoch}',
+                      credits: 1000.0,
+                      role: role,
+                      memberSince: DateTime.now(),
+                    );
+                    Provider.of<UserProvider>(
+                      context,
+                      listen: false,
+                    ).setUser(mockUser);
+                    Navigator.pushReplacementNamed(
+                      context,
+                      DashboardScreen.routeName,
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0D47A1),
@@ -165,8 +235,74 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField(String label, String hint, TextEditingController controller,
-      {bool obscureText = false, TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildKYCButton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'KYC Documents *',
+          style: GoogleFonts.poppins(
+            color: Colors.white70,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () async {
+              final result = await Navigator.pushNamed(
+                context,
+                '/payment-verification',
+              );
+              if (result == true) {
+                setState(() {
+                  hasCompletedKYC = true;
+                });
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: hasCompletedKYC
+                  ? Colors.green
+                  : const Color(0xFF0D47A1),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  hasCompletedKYC ? Icons.check_circle : Icons.upload_file,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  hasCompletedKYC ? 'KYC Completed' : 'Complete KYC Payment',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    String hint,
+    TextEditingController controller, {
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -193,7 +329,10 @@ class _LoginScreenState extends State<LoginScreen> {
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
         ),
       ],

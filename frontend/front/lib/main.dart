@@ -16,6 +16,7 @@ import 'utils/constants.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/payment_verification_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/home_screen_new.dart';
 import 'screens/data_screen.dart';
@@ -23,19 +24,18 @@ import 'screens/projects_screen.dart';
 import 'screens/market_screen.dart';
 import 'screens/wallet_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/uploads_screen.dart';
 import 'screens/blockzen/login/login_screen.dart';
 import 'screens/blockzen/dashboard_screen.dart';
-import 'screens/main_navigation_screen.dart';
 import 'providers/user_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/evidence_provider.dart';
 import 'providers/document_provider.dart';
+import 'providers/upload_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   if (!kIsWeb) {
     try {
       if (Platform.isAndroid) {
@@ -50,9 +50,17 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
-        ChangeNotifierProvider(create: (_) => TransactionProvider()),
+        ChangeNotifierProvider(
+          create: (_) {
+            final provider = TransactionProvider();
+            // Add sample transactions for demonstration
+            provider.addSampleTransactions();
+            return provider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => EvidenceProvider()),
         ChangeNotifierProvider(create: (_) => DocumentProvider()),
+        ChangeNotifierProvider(create: (_) => UploadProvider()),
       ],
       child: const MyApp(),
     ),
@@ -115,6 +123,8 @@ class MyApp extends StatelessWidget {
                 OnboardingScreen.routeName: (context) =>
                     const OnboardingScreen(),
                 LoginScreen.routeName: (context) => const LoginScreen(),
+                PaymentVerificationScreen.routeName: (context) =>
+                    const PaymentVerificationScreen(),
                 DashboardScreen.routeName: (context) => const DashboardScreen(),
                 HomeScreen.routeName: (context) => const HomeScreen(),
                 DataScreen.routeName: (context) => const DataScreen(),
@@ -122,9 +132,11 @@ class MyApp extends StatelessWidget {
                 MarketScreen.routeName: (context) => const MarketScreen(),
                 WalletScreen.routeName: (context) => const WalletScreen(),
                 ProfileScreen.routeName: (context) => const ProfileScreen(),
-                BlockZenLoginScreen.routeName: (context) => const BlockZenLoginScreen(),
-                BlockZenDashboardScreen.routeName: (context) => const BlockZenDashboardScreen(),
-                MainNavigationScreen.routeName: (context) => const MainNavigationScreen(),
+                BlockZenLoginScreen.routeName: (context) =>
+                    const BlockZenLoginScreen(),
+                BlockZenDashboardScreen.routeName: (context) =>
+                    const BlockZenDashboardScreen(),
+                UploadsScreen.routeName: (context) => const UploadsScreen(),
               },
             ),
           ),
