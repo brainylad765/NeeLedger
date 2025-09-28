@@ -33,6 +33,7 @@ import 'providers/transaction_provider.dart';
 import 'providers/evidence_provider.dart';
 import 'providers/document_provider.dart';
 import 'providers/upload_provider.dart';
+import 'screens/project_details_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -83,25 +84,26 @@ class MyApp extends StatelessWidget {
 
   static final MaterialColor blueSwatch =
       MaterialColor(0xFF0D47A1, <int, Color>{
-    50: Color(0xFFE3F2FD),
-    100: Color(0xFFBBDEFB),
-    200: Color(0xFF90CAF9),
-    300: Color(0xFF64B5F6),
-    400: Color(0xFF42A5F5),
-    500: Color(0xFF2196F3),
-    600: Color(0xFF1E88E5),
-    700: Color(0xFF1976D2),
-    800: Color(0xFF1565C0),
-    900: Color(0xFF0D47A1),
-  });
+        50: Color(0xFFE3F2FD),
+        100: Color(0xFFBBDEFB),
+        200: Color(0xFF90CAF9),
+        300: Color(0xFF64B5F6),
+        400: Color(0xFF42A5F5),
+        500: Color(0xFF2196F3),
+        600: Color(0xFF1E88E5),
+        700: Color(0xFF1976D2),
+        800: Color(0xFF1565C0),
+        900: Color(0xFF0D47A1),
+      });
 
   @override
   Widget build(BuildContext context) {
     // ✅ Constrain width for mobile-style UI on web/desktop
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxWidth =
-            constraints.maxWidth > 420 ? 420.0 : constraints.maxWidth;
+        final maxWidth = constraints.maxWidth > 420
+            ? 420.0
+            : constraints.maxWidth;
         return Center(
           child: SizedBox(
             width: maxWidth,

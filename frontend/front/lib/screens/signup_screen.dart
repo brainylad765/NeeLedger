@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:front/screens/login_screen.dart';
+import 'package:front/screens/dashboard_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -236,18 +237,65 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
 
+                const SizedBox(height: 24),
+
+                // Divider
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        color: Colors.white24,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'OR',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        color: Colors.white24,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // Login Section Title
+                Text(
+                  'Already have an account?',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
                 const SizedBox(height: 16),
 
-                // Login Redirect
+                // Login Form
+                _LoginSection(),
+
+                const SizedBox(height: 16),
+
+                // Switch to signup text
                 TextButton(
                   onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
-                    );
+                    // Clear login form and focus on signup
+                    FocusScope.of(context).requestFocus(FocusNode());
                   },
                   child: const Text(
-                    "Already have an account? Log in",
+                    "Need to create an account? Sign up above",
                     style: TextStyle(color: primaryColor),
                   ),
                 ),
@@ -255,6 +303,160 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _LoginSection extends StatefulWidget {
+  @override
+  _LoginSectionState createState() => _LoginSectionState();
+}
+
+class _LoginSectionState extends State<_LoginSection> {
+  final _loginFormKey = GlobalKey<FormState>();
+  final supabase = Supabase.instance.client;
+  
+  // Login Controllers
+  final TextEditingController _loginEmailController = TextEditingController();
+  final TextEditingController _loginPasswordController = TextEditingController();
+  
+  bool _isLoggingIn = false;
+  
+  Future<void> _login() async {
+    if (_loginFormKey.currentState!.validate()) {
+      setState(() {
+        _isLoggingIn = true;
+      });
+      
+      try {
+        final authResponse = await supabase.auth.signInWithPassword(
+          email: _loginEmailController.text.trim(),
+          password: _loginPasswordController.text.trim(),
+        );
+
+        if (authResponse.user != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login successful!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // Navigate directly to dashboard, bypassing KYC
+          Navigator.of(context).pushReplacementNamed(DashboardScreen.routeName);
+        }
+      } on AuthException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Login Failed: ${e.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Unexpected error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoggingIn = false;
+          });
+        }
+      }
+    }
+  }
+  
+  @override
+  void dispose() {
+    _loginEmailController.dispose();
+    _loginPasswordController.dispose();
+    super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    const primaryColor = Colors.lightBlueAccent;
+    
+    return Form(
+      key: _loginFormKey,
+      child: Column(
+        children: [
+          // Login Email
+          TextFormField(
+            controller: _loginEmailController,
+            keyboardType: TextInputType.emailAddress,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              labelStyle: TextStyle(color: Colors.white70),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white24),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: primaryColor),
+              ),
+            ),
+            validator: (value) =>
+                value == null || value.isEmpty ? 'Enter email' : null,
+          ),
+          const SizedBox(height: 16),
+          
+          // Login Password
+          TextFormField(
+            controller: _loginPasswordController,
+            obscureText: true,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Password',
+              labelStyle: TextStyle(color: Colors.white70),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white24),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: primaryColor),
+              ),
+            ),
+            validator: (value) =>
+                value == null || value.isEmpty ? 'Enter password' : null,
+          ),
+          const SizedBox(height: 24),
+          
+          // Login Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isLoggingIn ? null : _login,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                disabledBackgroundColor: Colors.grey,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: _isLoggingIn
+                  ? const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    )
+                  : Text(
+                      'Login',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }

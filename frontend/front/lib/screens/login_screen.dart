@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../providers/user_provider.dart';
 import '../models/user_model.dart';
 import 'dashboard_screen.dart';
+import 'nextlogin.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String routeName = '/login';
@@ -226,6 +227,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       fontSize: 16,
                       color: Colors.white,
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NextLogin()),
+                  );
+                },
+                child: Text(
+                  "Already have an account? Log in",
+                  style: GoogleFonts.poppins(
+                    color: Colors.lightBlueAccent,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
                   ),
                 ),
               ),

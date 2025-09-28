@@ -88,10 +88,61 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       'totalValue': 5000000,
       'type': 'Reforestation',
     },
+    {
+      'id': '6',
+      'name': 'Mangrove Restoration Initiative',
+      'location': 'Chilika Lake, Odisha',
+      'status': 'Requested',
+      'progress': 0.0,
+      'carbonCredits': 750000,
+      'startDate': '2024-07-01',
+      'endDate': '2027-06-30',
+      'description':
+          'Restoring mangrove ecosystems to combat coastal erosion and enhance biodiversity.',
+      'investors': 0,
+      'totalValue': 22000000,
+      'type': 'Conservation',
+    },
+    {
+      'id': '7',
+      'name': 'Biogas Plant Network',
+      'location': 'Punjab Agricultural Belt',
+      'status': 'Completed',
+      'progress': 1.0,
+      'carbonCredits': 950000,
+      'startDate': '2020-09-01',
+      'endDate': '2023-08-31',
+      'description':
+          'Converting agricultural waste into biogas for clean energy production.',
+      'investors': 156,
+      'totalValue': 28000000,
+      'type': 'Renewable Energy',
+    },
+    {
+      'id': '8',
+      'name': 'Solar Microgrid Expansion',
+      'location': 'Rajasthan Desert',
+      'status': 'Completed',
+      'progress': 1.0,
+      'carbonCredits': 1800000,
+      'startDate': '2022-02-01',
+      'endDate': '2024-01-31',
+      'description':
+          'Expanding solar microgrids to provide clean energy to remote villages.',
+      'investors': 203,
+      'totalValue': 35000000,
+      'type': 'Renewable Energy',
+    },
   ];
 
   String _selectedFilter = 'All';
-  final List<String> _filters = ['All', 'Active', 'Planning', 'Completed'];
+  final List<String> _filters = [
+    'All',
+    'Active',
+    'Planning',
+    'Completed',
+    'Requested',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -410,7 +461,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => ProjectDetailsScreen(project: project),
+                        builder: (context) =>
+                            ProjectDetailsScreen(project: project),
                       ),
                     );
                   },
@@ -509,6 +561,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         return const Color(0xFFFF9800);
       case 'Completed':
         return const Color(0xFF2196F3);
+      case 'Requested':
+        return Colors.red;
       default:
         return Colors.grey;
     }

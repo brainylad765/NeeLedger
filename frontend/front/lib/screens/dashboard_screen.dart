@@ -60,8 +60,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final storagePath = '${user.id}/$fileName';
       await supabase.storage.from('projects').upload(storagePath, file);
 
-      final fileUrl =
-          supabase.storage.from('projects').getPublicUrl(storagePath);
+      final fileUrl = supabase.storage
+          .from('projects')
+          .getPublicUrl(storagePath);
 
       await supabase.from('projects').insert({
         'user_id': user.id,
@@ -76,9 +77,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {});
       }
     } on StorageException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Upload failed: ${e.message}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Upload failed: ${e.message}')));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred: $e')),
@@ -98,56 +99,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Dashboard'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () async {
-                await supabase.auth.signOut();
-                if (mounted) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                        builder: (context) => const WelcomeScreen()),
-                  );
-                }
-              },
-            )
-          ],
-        ),
-        body: _selectedIndex == 1
-            ? FutureBuilder<List<Map<String, dynamic>>>(
-                future: _fetchProjects(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-                  final projects = snapshot.data ?? [];
-                  if (projects.isEmpty) {
-                    return const Center(
-                        child: Text('No projects yet. Upload one!'));
-                  }
-
-                  return ListView.builder(
-                    itemCount: projects.length,
-                    itemBuilder: (context, index) {
-                      final project = projects[index];
-                      return ListTile(
-                        title: Text(project['title']),
-                        subtitle: Text('Uploaded on: ${project['created_at']}'),
-                        trailing: const Icon(Icons.arrow_forward),
-                        onTap: () {
-                          // You could launch URL here with url_launcher
-                        },
-                      );
-                    },
-                  );
-                },
-              )
-            : SafeArea(child: _pages[_selectedIndex]),
+        body: SafeArea(child: _pages[_selectedIndex]),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: Theme.of(context).bottomNavigationBarTheme.backgroundColor,

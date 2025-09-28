@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'project_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   static const String routeName = '/home';
@@ -11,6 +12,84 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
+
+  final List<Map<String, dynamic>> _projects = [
+    {
+      'id': '1',
+      'name': 'Solar Farm Initiative',
+      'location': 'Mahandi Delta, Odisha',
+      'status': 'Active',
+      'progress': 0.85,
+      'carbonCredits': 1250000,
+      'startDate': '2023-01-15',
+      'endDate': '2025-12-31',
+      'description':
+          'Large-scale solar installation project generating renewable energy and carbon credits.',
+      'investors': 45,
+      'totalValue': 25000000,
+      'type': 'Renewable Energy',
+    },
+    {
+      'id': '2',
+      'name': 'Kutch Conservation',
+      'location': 'Gulf of Kutch, Gujrat',
+      'status': 'Active',
+      'progress': 0.92,
+      'carbonCredits': 850000,
+      'startDate': '2022-06-01',
+      'endDate': '2032-05-31',
+      'description':
+          'Protecting 500,000 hectares of pristine rainforest from deforestation.',
+      'investors': 128,
+      'totalValue': 15000000,
+      'type': 'Conservation',
+    },
+    {
+      'id': '3',
+      'name': 'Wind Energy Project',
+      'location': 'Bhitarkanika',
+      'status': 'Planning',
+      'progress': 0.25,
+      'carbonCredits': 600000,
+      'startDate': '2024-03-01',
+      'endDate': '2026-02-28',
+      'description':
+          'Offshore wind farm development with advanced turbine technology.',
+      'investors': 23,
+      'totalValue': 18000000,
+      'type': 'Renewable Energy',
+    },
+    {
+      'id': '4',
+      'name': 'Ocean Cleanup Initiative',
+      'location': 'Indian Ocean',
+      'status': 'Active',
+      'progress': 0.67,
+      'carbonCredits': 450000,
+      'startDate': '2023-09-01',
+      'endDate': '2025-08-31',
+      'description':
+          'Removing plastic pollution from ocean gyres to restore marine ecosystems.',
+      'investors': 67,
+      'totalValue': 12000000,
+      'type': 'Environmental Cleanup',
+    },
+    {
+      'id': '5',
+      'name': 'Urban Reforestation Program',
+      'location': 'Sunderbans, W.B.',
+      'status': 'Completed',
+      'progress': 1.0,
+      'carbonCredits': 125000,
+      'startDate': '2021-04-01',
+      'endDate': '2023-03-31',
+      'description':
+          'Planting 50,000 trees across urban areas to improve air quality.',
+      'investors': 89,
+      'totalValue': 5000000,
+      'type': 'Reforestation',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -153,26 +232,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
 
                     // Project List
-                    _buildProjectItem(
-                      'Solar Farm Initiative',
-                      'Active',
-                      '1.2M tonnes CO₂',
-                    ),
-                    _buildProjectItem(
-                      'Reforestation Program',
-                      'Active',
-                      '850K tonnes CO₂',
-                    ),
-                    _buildProjectItem(
-                      'Wind Energy Project',
-                      'Passive',
-                      '600K tonnes CO₂',
-                    ),
-                    _buildProjectItem(
-                      'Ocean Cleanup Initiative',
-                      'Active',
-                      '450K tonnes CO₂',
-                    ),
+                    _buildProjectItem(_projects[0]),
+                    _buildProjectItem(_projects[4]),
+                    _buildProjectItem(_projects[2]),
+                    _buildProjectItem(_projects[3]),
 
                     const SizedBox(height: 32),
 
@@ -280,62 +343,76 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildProjectItem(String name, String status, String carbonAmount) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
+  Widget _buildProjectItem(Map<String, dynamic> project) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProjectDetailsScreen(project: project),
+        ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E1E),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    project['name'],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  carbonAmount,
-                  style: TextStyle(color: Colors.grey[400], fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: status == 'Active'
-                  ? const Color(0xFF4CAF50).withValues(alpha: 51)
-                  : const Color(0xFFFF9800).withValues(alpha: 51),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: status == 'Active'
-                    ? const Color(0xFF4CAF50)
-                    : const Color(0xFFFF9800),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${project['carbonCredits'] ~/ 1000}K tonnes CO₂',
+                    style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                  ),
+                ],
               ),
             ),
-            child: Text(
-              status,
-              style: TextStyle(
-                color: status == 'Active'
-                    ? const Color(0xFF4CAF50)
-                    : const Color(0xFFFF9800),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: project['status'] == 'Active'
+                    ? const Color(0xFF4CAF50).withValues(alpha: 51)
+                    : project['status'] == 'Planning'
+                    ? const Color(0xFFFF9800).withValues(alpha: 51)
+                    : const Color(0xFF2196F3).withValues(alpha: 51),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: project['status'] == 'Active'
+                      ? const Color(0xFF4CAF50)
+                      : project['status'] == 'Planning'
+                      ? const Color(0xFFFF9800)
+                      : const Color(0xFF2196F3),
+                ),
+              ),
+              child: Text(
+                project['status'],
+                style: TextStyle(
+                  color: project['status'] == 'Active'
+                      ? const Color(0xFF4CAF50)
+                      : project['status'] == 'Planning'
+                      ? const Color(0xFFFF9800)
+                      : const Color(0xFF2196F3),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

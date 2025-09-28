@@ -75,4 +75,15 @@ class ApiService {
       throw Exception('Failed to upload document metadata');
     }
   }
+
+  Future<List<Map<String, dynamic>>> fetchUserProjects() async {
+    final response = await http.get(Uri.parse('$baseUrl/user/projects'));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as List;
+      return data.map((json) => json as Map<String, dynamic>).toList();
+    } else {
+      throw Exception('Failed to fetch user projects');
+    }
+  }
 }
