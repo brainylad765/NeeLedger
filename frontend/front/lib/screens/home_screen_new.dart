@@ -12,6 +12,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
+  bool _showAllProjects = false;
 
   final List<Map<String, dynamic>> _projects = [
     {
@@ -93,6 +94,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final List<int> visibleIndices = _showAllProjects
+        ? [0, 4, 2, 3, 1]
+        : [0, 4, 2, 3];
     return Scaffold(
       backgroundColor: const Color(0xFF0D47A1), // Blue background
       body: SafeArea(
@@ -232,10 +236,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
 
                     // Project List
-                    _buildProjectItem(_projects[0]),
-                    _buildProjectItem(_projects[4]),
-                    _buildProjectItem(_projects[2]),
-                    _buildProjectItem(_projects[3]),
+                    ...visibleIndices
+                        .map((i) => _buildProjectItem(_projects[i]))
+                        .toList(),
+                    if (!_showAllProjects) _buildShowMoreButton(),
 
                     const SizedBox(height: 32),
 
@@ -449,6 +453,39 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(color: Colors.grey[400], fontSize: 12),
               textAlign: TextAlign.center,
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShowMoreButton() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _showAllProjects = true;
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0D47A1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Show More',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(width: 8),
+            Icon(Icons.expand_more, color: Colors.white, size: 20),
           ],
         ),
       ),

@@ -259,15 +259,16 @@ class _DataScreenState extends State<DataScreen> {
 
               const SizedBox(height: 32),
 
-              // Upload History
-              Consumer<UploadProvider>(
-                builder: (context, provider, child) {
-                  if (provider.pdfs.isEmpty) return const SizedBox.shrink();
+              // Evidence History
+              Consumer<EvidenceProvider>(
+                builder: (context, evidenceProvider, child) {
+                  if (evidenceProvider.items.isEmpty)
+                    return const SizedBox.shrink();
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Recent Uploads',
+                        'Evidence History',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -276,11 +277,11 @@ class _DataScreenState extends State<DataScreen> {
                       ),
                       const SizedBox(height: 16),
                       ListView.builder(
-                        itemCount: provider.pdfs.length,
+                        itemCount: evidenceProvider.items.length,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemBuilder: (context, index) {
-                          final pdf = provider.pdfs[index];
+                          final evidence = evidenceProvider.items[index];
                           return Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(12),
@@ -296,12 +297,37 @@ class _DataScreenState extends State<DataScreen> {
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: Text(
-                                    pdf.name,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                    ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        evidence.filePath.split('/').last,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      if (evidence.latitude != null &&
+                                          evidence.longitude != null)
+                                        Text(
+                                          '${evidence.latitude!.toStringAsFixed(4)}, ${evidence.longitude!.toStringAsFixed(4)}',
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      Text(
+                                        evidence.timestamp.toString().split(
+                                          'T',
+                                        )[0],
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 const Spacer(),

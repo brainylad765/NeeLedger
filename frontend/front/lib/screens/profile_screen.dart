@@ -185,7 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'My Profile',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: const Color(0xFF0D47A1),
         elevation: 0,
         actions: [
           IconButton(
@@ -197,13 +197,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.blueAccent, Colors.white],
-          ),
-        ),
+        color: const Color(0xFF0F1416),
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 8),
           children: [
@@ -217,63 +211,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 }
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white,
-                        child: const Icon(
-                          Icons.person,
-                          size: 50,
-                          color: Colors.blueAccent,
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1E1E),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: const Color(0xFF0D47A1),
+                          child: const Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _nameController.text,
-                                    style: const TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      _nameController.text,
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.edit,
-                                    color: Colors.white,
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.edit,
+                                      color: Colors.white,
+                                    ),
+                                    onPressed: _openEditNameDialog,
                                   ),
-                                  onPressed: _openEditNameDialog,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _emailController.text,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.white70,
+                                ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 4),
+                              Text(
+                                _emailController.text,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
             ),
 
             // Profile card with Map + Menu
-            Card(
+            Container(
               margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Column(
                 children: [
                   SizedBox(
@@ -283,10 +288,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ListTile(
                           title: Text(
                             _placeName,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                           subtitle: Text(
                             'Lat: ${_center.latitude.toStringAsFixed(4)}, Lng: ${_center.longitude.toStringAsFixed(4)}',
+                            style: const TextStyle(color: Colors.grey),
                           ),
                           trailing: _mapLoading
                               ? const SizedBox(
@@ -294,6 +303,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Color(0xFF0D47A1),
+                                    ),
                                   ),
                                 )
                               : null,
@@ -340,6 +352,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Color(0xFF0D47A1),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -349,7 +364,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 child: FloatingActionButton(
                                   mini: true,
                                   onPressed: _getCurrentLocation,
-                                  backgroundColor: Colors.blue,
+                                  backgroundColor: const Color(0xFF0D47A1),
                                   child: const Icon(
                                     Icons.my_location,
                                     color: Colors.white,
@@ -365,33 +380,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // Menu items
                   ListTile(
-                    leading: const Icon(Icons.folder_open),
-                    title: const Text('Your Projects'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    leading: const Icon(
+                      Icons.folder_open,
+                      color: Color(0xFF0D47A1),
+                    ),
+                    title: const Text(
+                      'Your Projects',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => YourProjectsScreen()),
                     ),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.cloud_upload),
-                    title: const Text('Uploads'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    leading: const Icon(
+                      Icons.cloud_upload,
+                      color: Color(0xFF0D47A1),
+                    ),
+                    title: const Text(
+                      'Uploads',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const UploadsScreen()),
                     ),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.location_on),
-                    title: const Text('Location (Map above)'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    leading: const Icon(
+                      Icons.location_on,
+                      color: Color(0xFF0D47A1),
+                    ),
+                    title: const Text(
+                      'Location (Map above)',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     onTap: () {
                       // Optionally open a full-screen map in future
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.receipt_long),
-                    title: const Text('Recent Transactions'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    leading: const Icon(
+                      Icons.receipt_long,
+                      color: Color(0xFF0D47A1),
+                    ),
+                    title: const Text(
+                      'Recent Transactions',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const RecentTransScreen(),
@@ -399,18 +454,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.logout),
-                    title: const Text('Log Out'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    leading: const Icon(Icons.logout, color: Color(0xFF0D47A1)),
+                    title: const Text(
+                      'Log Out',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     onTap: () {
                       // log out
                     },
                   ),
 
                   // App version
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text(
+                  Container(
+                    padding: const EdgeInsets.all(16.0),
+                    child: const Text(
                       'App Version 3.0',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.grey, fontSize: 14),

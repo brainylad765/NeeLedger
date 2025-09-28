@@ -11,6 +11,7 @@ import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // ✅ merged import
 import 'firebase_options.dart';
+import 'auth_gate.dart'; // ✅ added
 
 import 'utils/constants.dart';
 
@@ -129,9 +130,10 @@ class MyApp extends StatelessWidget {
                   secondary: kAccent,
                 ),
               ),
-              initialRoute: WelcomeScreen.routeName,
+              initialRoute: '/',
               debugShowCheckedModeBanner: false, // ✅ added
               routes: {
+                '/': (context) => const AuthGate(),
                 WelcomeScreen.routeName: (context) => const WelcomeScreen(),
                 OnboardingScreen.routeName: (context) =>
                     const OnboardingScreen(),

@@ -1,282 +1,279 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/upload_provider.dart';
-import '../services/api_service.dart';
+import '../providers/project_provider.dart';
+import '../models/project_model.dart';
 import '../widgets/custom_button.dart';
 import 'project_details_screen.dart';
 
-class YourProjectsScreen extends StatefulWidget {
+class YourProjectsScreen extends StatelessWidget {
   YourProjectsScreen({Key? key}) : super(key: key);
   static const routeName = '/your-projects';
 
-  @override
-  State<YourProjectsScreen> createState() => _YourProjectsScreenState();
-}
-
-class _YourProjectsScreenState extends State<YourProjectsScreen> {
-  final ApiService _apiService = ApiService();
-  List<Map<String, dynamic>> _projects = [];
-  bool _isLoading = true;
   String _selectedFilter = 'All';
   final List<String> _filters = ['All', 'Active', 'Planning', 'Completed'];
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchProjects();
-  }
-
-  Future<void> _fetchProjects() async {
-    try {
-      final projects = await _apiService.fetchUserProjects();
-      setState(() {
-        _projects = projects;
-        _isLoading = false;
-      });
-      if (_projects.isEmpty) {
-        _showNoProjectsSnackbar();
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      _showNoProjectsSnackbar();
-    }
-  }
-
-  void _showNoProjectsSnackbar() {
+  void _showNoProjectsSnackbar(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'No projects initiated yet. Please upload documents in the Uploads section.',
-            ),
-            duration: Duration(seconds: 3),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'No projects initiated yet. Please upload documents in the Uploads section.',
           ),
-        );
-      }
+          duration: Duration(seconds: 3),
+        ),
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        backgroundColor: const Color(0xFF0F1416),
-        body: const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D47A1)),
-          ),
-        ),
-      );
-    }
+    return Consumer<ProjectProvider>(
+      builder: (context, projectProvider, child) {
+        if (projectProvider.isLoading) {
+          return Scaffold(
+            backgroundColor: const Color(0xFF0F1416),
+            body: const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D47A1)),
+              ),
+            ),
+          );
+        }
 
-    final filteredProjects = _selectedFilter == 'All'
-        ? _projects
-        : _projects
-              .where((project) => project['status'] == _selectedFilter)
-              .toList();
-
-    final int totalCredits = _projects.fold(
-      0,
-      (sum, p) => sum + ((p['carbonCredits'] ?? 0) as int),
-    );
-    final int totalValue = _projects.fold(
-      0,
-      (sum, p) => sum + ((p['totalValue'] ?? 0) as int),
-    );
-    final int activeProjectsCount = _projects
-        .where((p) => p['status'] == 'Active')
-        .length;
-    final int portfolioValueM = totalValue ~/ 1000000;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F1416),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 40),
-
-              // Header
-              Row(
+        if (projectProvider.error != null) {
+          return Scaffold(
+            backgroundColor: const Color(0xFF0F1416),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D47A1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.business_center,
-                      color: Colors.white,
-                      size: 28,
+                  Text(
+                    'Error: ${projectProvider.error}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => projectProvider.refreshProjects(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final List<Project> projects = projectProvider.projects;
+        final List<Project> filteredProjects = _selectedFilter == 'All'
+            ? projects
+            : projects
+                  .where((project) => project.status == _selectedFilter)
+                  .toList();
+
+        final int totalCredits = projects.fold(
+          0,
+          (sum, p) => sum + p.carbonCredits,
+        );
+        final int totalValue = projects.fold(0, (sum, p) => sum + p.totalValue);
+        final int activeProjectsCount = projects
+            .where((p) => p.status == 'Active')
+            .length;
+        final int portfolioValueM = totalValue ~/ 1000000;
+
+        if (projects.isEmpty) {
+          _showNoProjectsSnackbar(context);
+        }
+
+        return Scaffold(
+          backgroundColor: const Color(0xFF0F1416),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 40),
+
+                  // Header
+                  Row(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0D47A1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.business_center,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Text(
+                        'Projects',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Filter Buttons
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: _filters.map((filter) {
+                        return Container(
+                          margin: const EdgeInsets.only(right: 12),
+                          child: FilterChip(
+                            label: Text(filter),
+                            selected: _selectedFilter == filter,
+                            onSelected: (selected) {
+                              if (selected) {
+                                _selectedFilter = filter;
+                              }
+                            },
+                            backgroundColor: const Color(0xFF1E1E1E),
+                            selectedColor: const Color(0xFF0D47A1),
+                            checkmarkColor: Colors.white,
+                            labelStyle: TextStyle(
+                              color: _selectedFilter == filter
+                                  ? Colors.white
+                                  : Colors.grey,
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  const Text(
-                    'Projects',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+
+                  const SizedBox(height: 32),
+
+                  // Projects List
+                  if (filteredProjects.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(40),
+                      alignment: Alignment.center,
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.business_center,
+                            color: Colors.grey[600],
+                            size: 64,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No projects found',
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pushNamed('/uploads');
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0D47A1),
+                            ),
+                            child: const Text('Go to Uploads'),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      itemCount: filteredProjects.length,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        final project = filteredProjects[index];
+                        return _buildProjectCard(context, project);
+                      },
+                    ),
+
+                  const SizedBox(height: 32),
+
+                  // Summary Statistics
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1E1E),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFF0D47A1).withAlpha(77),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Portfolio Summary',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            _buildSummaryCard(
+                              'Total Projects',
+                              '${projects.length}',
+                              Icons.business_center,
+                              const Color(0xFF2196F3),
+                            ),
+                            const SizedBox(width: 16),
+                            _buildSummaryCard(
+                              'Active Projects',
+                              '$activeProjectsCount',
+                              Icons.play_circle,
+                              const Color(0xFF4CAF50),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            _buildSummaryCard(
+                              'Total Credits',
+                              '$totalCredits',
+                              Icons.eco,
+                              const Color(0xFF4CAF50),
+                            ),
+                            const SizedBox(width: 16),
+                            _buildSummaryCard(
+                              'Portfolio Value',
+                              '\$$portfolioValueM M',
+                              Icons.account_balance,
+                              const Color(0xFFFF9800),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 32),
-
-              // Filter Buttons
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: _filters.map((filter) {
-                    return Container(
-                      margin: const EdgeInsets.only(right: 12),
-                      child: FilterChip(
-                        label: Text(filter),
-                        selected: _selectedFilter == filter,
-                        onSelected: (selected) {
-                          setState(() {
-                            _selectedFilter = filter;
-                          });
-                        },
-                        backgroundColor: const Color(0xFF1E1E1E),
-                        selectedColor: const Color(0xFF0D47A1),
-                        checkmarkColor: Colors.white,
-                        labelStyle: TextStyle(
-                          color: _selectedFilter == filter
-                              ? Colors.white
-                              : Colors.grey,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Projects List
-              if (filteredProjects.isEmpty)
-                Container(
-                  padding: const EdgeInsets.all(40),
-                  alignment: Alignment.center,
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.business_center,
-                        color: Colors.grey[600],
-                        size: 64,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No projects found',
-                        style: TextStyle(color: Colors.grey[400], fontSize: 18),
-                      ),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pushNamed('/uploads');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0D47A1),
-                        ),
-                        child: const Text('Go to Uploads'),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                ListView.builder(
-                  itemCount: filteredProjects.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    final project = filteredProjects[index];
-                    return _buildProjectCard(project);
-                  },
-                ),
-
-              const SizedBox(height: 32),
-
-              // Summary Statistics
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E1E),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFF0D47A1).withAlpha(77),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Portfolio Summary',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        _buildSummaryCard(
-                          'Total Projects',
-                          '${_projects.length}',
-                          Icons.business_center,
-                          const Color(0xFF2196F3),
-                        ),
-                        const SizedBox(width: 16),
-                        _buildSummaryCard(
-                          'Active Projects',
-                          '$activeProjectsCount',
-                          Icons.play_circle,
-                          const Color(0xFF4CAF50),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        _buildSummaryCard(
-                          'Total Credits',
-                          '$totalCredits',
-                          Icons.eco,
-                          const Color(0xFF4CAF50),
-                        ),
-                        const SizedBox(width: 16),
-                        _buildSummaryCard(
-                          'Portfolio Value',
-                          '\$$portfolioValueM M',
-                          Icons.account_balance,
-                          const Color(0xFFFF9800),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildProjectCard(Map<String, dynamic> project) {
-    final double progress = project['progress'] as double;
+  Widget _buildProjectCard(BuildContext context, Project project) {
+    final double progress = project.progress;
     final int progressPercent = (progress * 100).toInt();
-    final int carbonCredits = project['carbonCredits'] as int;
+    final int carbonCredits = project.carbonCredits;
     final int creditsK = carbonCredits ~/ 1000;
-    final int investors = project['investors'] as int;
+    final int investors = 0; // Default, as not in model; can add later
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -285,7 +282,7 @@ class _YourProjectsScreenState extends State<YourProjectsScreen> {
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _getStatusColor(project['status']).withAlpha(77),
+          color: _getStatusColor(project.status).withAlpha(77),
         ),
       ),
       child: Column(
@@ -300,7 +297,7 @@ class _YourProjectsScreenState extends State<YourProjectsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      project['name'],
+                      project.name,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -317,7 +314,7 @@ class _YourProjectsScreenState extends State<YourProjectsScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          project['location'],
+                          project.location ?? 'No location',
                           style: TextStyle(
                             color: Colors.grey[400],
                             fontSize: 14,
@@ -334,14 +331,14 @@ class _YourProjectsScreenState extends State<YourProjectsScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(project['status']).withAlpha(51),
+                  color: _getStatusColor(project.status).withAlpha(51),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _getStatusColor(project['status'])),
+                  border: Border.all(color: _getStatusColor(project.status)),
                 ),
                 child: Text(
-                  project['status'],
+                  project.status,
                   style: TextStyle(
-                    color: _getStatusColor(project['status']),
+                    color: _getStatusColor(project.status),
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -378,7 +375,7 @@ class _YourProjectsScreenState extends State<YourProjectsScreen> {
                 value: progress,
                 backgroundColor: Colors.grey[800],
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  _getStatusColor(project['status']),
+                  _getStatusColor(project.status),
                 ),
               ),
             ],
@@ -402,7 +399,7 @@ class _YourProjectsScreenState extends State<YourProjectsScreen> {
               Expanded(
                 child: _buildDetailItem(
                   'Type',
-                  project['type'],
+                  project.type ?? 'N/A',
                   Icons.category,
                 ),
               ),
@@ -413,7 +410,7 @@ class _YourProjectsScreenState extends State<YourProjectsScreen> {
 
           // Description
           Text(
-            project['description'],
+            project.description ?? 'No description',
             style: TextStyle(color: Colors.grey[400], fontSize: 14),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -431,7 +428,7 @@ class _YourProjectsScreenState extends State<YourProjectsScreen> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) =>
-                            ProjectDetailsScreen(project: project),
+                            ProjectDetailsScreen(project: project.toJson()),
                       ),
                     );
                   },
@@ -443,7 +440,7 @@ class _YourProjectsScreenState extends State<YourProjectsScreen> {
                 child: CustomButton(
                   text: 'Invest',
                   onPressed: () {
-                    _showInvestmentDialog(project);
+                    _showInvestmentDialog(context, project);
                   },
                   backgroundColor: const Color(0xFF4CAF50),
                 ),
@@ -535,15 +532,15 @@ class _YourProjectsScreenState extends State<YourProjectsScreen> {
     }
   }
 
-  void _showInvestmentDialog(Map<String, dynamic> project) {
-    final int projectValue = (project['totalValue'] as int) ~/ 1000000;
+  void _showInvestmentDialog(BuildContext context, Project project) {
+    final int projectValue = project.totalValue ~/ 1000000;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
         title: Text(
-          'Invest in ${project['name']}',
+          'Invest in ${project.name}',
           style: const TextStyle(color: Colors.white),
         ),
         content: Column(

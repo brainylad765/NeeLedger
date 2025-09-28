@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../providers/user_provider.dart';
 import '../models/user_model.dart';
+import '../auth_repository.dart';
 import 'dashboard_screen.dart';
 import 'nextlogin.dart';
 
@@ -25,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isProjectProponent = true;
   bool hasCompletedKYC = false;
 
-  final supabase = Supabase.instance.client;
+  final _authRepo = AuthRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -192,21 +193,39 @@ class _LoginScreenState extends State<LoginScreen> {
                       return;
                     }
                     try {
-                      final response = await supabase.auth.signUp(
-                        email: emailController.text.trim(),
-                        password: passwordController.text.trim(),
+                      final response = await _authRepo.signUp(
+                        emailController.text.trim(),
+                        passwordController.text.trim(),
                       );
                       if (response.user != null) {
+                        // Create profile
+                        await _authRepo.createProfile(
+                          userId: response.user!.id,
+                          fullName: fullNameController.text.trim(),
+                          mobile: mobileController.text.trim(),
+                          isProjectProponent: isProjectProponent,
+                          hasCompletedKYC: hasCompletedKYC,
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Account created successfully!'),
+                            content: Text(
+                              'Account created successfully! Check your email for confirmation.',
+                            ),
                           ),
                         );
-                        Navigator.pushReplacementNamed(
-                          context,
-                          DashboardScreen.routeName,
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Sign up initiated. Check your email for confirmation.',
+                            ),
+                          ),
                         );
                       }
+                    } on AuthException catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: ${e.message}')),
+                      );
                     } catch (e) {
                       ScaffoldMessenger.of(
                         context,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import '../auth_repository.dart';
 import 'dashboard_screen.dart';
 
 class NextLogin extends StatefulWidget {
@@ -18,7 +19,7 @@ class _NextLoginState extends State<NextLogin> {
   bool isLoading = false;
   final TextEditingController resetEmailController = TextEditingController();
 
-  final supabase = Supabase.instance.client;
+  final _authRepo = AuthRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -209,9 +210,9 @@ class _NextLoginState extends State<NextLogin> {
     setState(() => isLoading = true);
 
     try {
-      final response = await supabase.auth.signInWithPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+      final response = await _authRepo.signIn(
+        emailController.text.trim(),
+        passwordController.text.trim(),
       );
 
       if (response.user != null) {
@@ -219,7 +220,7 @@ class _NextLoginState extends State<NextLogin> {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text("Login successful!")));
-          Navigator.pushReplacementNamed(context, DashboardScreen.routeName);
+          // AuthGate will handle navigation
         }
       } else {
         if (mounted) {
@@ -230,11 +231,17 @@ class _NextLoginState extends State<NextLogin> {
           );
         }
       }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Login failed: ${e.message}")));
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Login failed: ${e.toString()}")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Login failed: $e")));
       }
     } finally {
       if (mounted) setState(() => isLoading = false);
@@ -287,7 +294,7 @@ class _NextLoginState extends State<NextLogin> {
                 return;
               }
               try {
-                await supabase.auth.resetPasswordForEmail(
+                await Supabase.instance.client.auth.resetPasswordForEmail(
                   resetEmailController.text.trim(),
                   redirectTo:
                       'https://your-app.com/reset-password', // Update with your app's URL

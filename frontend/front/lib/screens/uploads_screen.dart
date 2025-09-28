@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 
 import '../providers/upload_provider.dart';
+import '../providers/evidence_provider.dart';
+import '../providers/project_provider.dart';
 
 class UploadsScreen extends StatefulWidget {
   const UploadsScreen({Key? key}) : super(key: key);
@@ -41,14 +43,46 @@ class _UploadsScreenState extends State<UploadsScreen> {
     );
     if (res == null) return;
 
-    final provider = Provider.of<UploadProvider>(context, listen: false);
+    final uploadProvider = Provider.of<UploadProvider>(context, listen: false);
+    final evidenceProvider = Provider.of<EvidenceProvider>(
+      context,
+      listen: false,
+    );
+    final projectProvider = Provider.of<ProjectProvider>(
+      context,
+      listen: false,
+    );
+
     for (final file in res.files) {
-      await provider.addPdf(file);
+      await uploadProvider.addPdf(file);
+
+      // Upload to Supabase via EvidenceProvider
+      await evidenceProvider.addPdfEvidence(
+        fileName: file.name,
+        fileBytes: file.bytes!,
+      );
+
+      // Create project
+      final evidenceId =
+          evidenceProvider.items.last.id; // Assuming last added is the one
+      await projectProvider.createProject(
+        name: 'Project from ${file.name}',
+        status: 'Planning',
+        evidenceId: evidenceId,
+        carbonCredits: 0,
+        totalValue: 0,
+        progress: 0.0,
+        location: '',
+        type: 'Document',
+        description: 'Uploaded PDF document',
+      );
     }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('PDF(s) uploaded successfully')),
+        const SnackBar(
+          content: Text('PDF(s) uploaded and projects created successfully'),
+        ),
       );
     }
   }
@@ -92,7 +126,7 @@ class _UploadsScreenState extends State<UploadsScreen> {
     setState(() {
       _imageFlowActive = true;
     });
-    
+
     _startCountdownAndCapture();
   }
 
@@ -154,7 +188,15 @@ class _UploadsScreenState extends State<UploadsScreen> {
 
   /// Capture image + GPS
   Future<void> _captureImage() async {
-    final provider = Provider.of<UploadProvider>(context, listen: false);
+    final uploadProvider = Provider.of<UploadProvider>(context, listen: false);
+    final evidenceProvider = Provider.of<EvidenceProvider>(
+      context,
+      listen: false,
+    );
+    final projectProvider = Provider.of<ProjectProvider>(
+      context,
+      listen: false,
+    );
     if (_capturedImagesCount >= 5) return;
 
     final xfile = await _picker.pickImage(
@@ -183,8 +225,34 @@ class _UploadsScreenState extends State<UploadsScreen> {
       );
     }
 
-    await provider.addImage(File(xfile.path), pos.latitude, pos.longitude);
-    
+    await uploadProvider.addImage(
+      File(xfile.path),
+      pos.latitude,
+      pos.longitude,
+    );
+
+    // Upload to Supabase via EvidenceProvider
+    await evidenceProvider.addEvidence(
+      xfile.path,
+      lat: pos.latitude,
+      lon: pos.longitude,
+    );
+
+    // Create project
+    final evidenceId =
+        evidenceProvider.items.last.id; // Assuming last added is the one
+    await projectProvider.createProject(
+      name: 'Project from image ${_capturedImagesCount + 1}',
+      status: 'Planning',
+      evidenceId: evidenceId,
+      carbonCredits: 0,
+      totalValue: 0,
+      progress: 0.0,
+      location: '${pos.latitude}, ${pos.longitude}',
+      type: 'Image',
+      description: 'Captured image evidence',
+    );
+
     setState(() {
       _capturedImagesCount++;
     });
@@ -194,11 +262,13 @@ class _UploadsScreenState extends State<UploadsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _capturedImagesCount >= 5 
+            _capturedImagesCount >= 5
                 ? '5/5 - Maximum images captured!'
                 : '$_capturedImagesCount/5 - Image captured successfully!',
           ),
-          backgroundColor: _capturedImagesCount >= 5 ? Colors.green : Colors.blue,
+          backgroundColor: _capturedImagesCount >= 5
+              ? Colors.green
+              : Colors.blue,
           duration: const Duration(seconds: 2),
         ),
       );
@@ -237,9 +307,15 @@ class _UploadsScreenState extends State<UploadsScreen> {
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton.icon(
-                    onPressed: _capturedImagesCount >= 5 ? null : _startImageFlow,
+                    onPressed: _capturedImagesCount >= 5
+                        ? null
+                        : _startImageFlow,
                     icon: const Icon(Icons.camera_alt),
-                    label: Text(_capturedImagesCount >= 5 ? '5/5 Images' : 'Upload Images'),
+                    label: Text(
+                      _capturedImagesCount >= 5
+                          ? '5/5 Images'
+                          : 'Upload Images',
+                    ),
                   ),
                 ],
               ),
@@ -326,7 +402,9 @@ class _UploadsScreenState extends State<UploadsScreen> {
                       LinearProgressIndicator(
                         value: _capturedImagesCount / 5,
                         backgroundColor: Colors.grey[300],
-                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Colors.green,
+                        ),
                       ),
                       if (_capturedImagesCount >= 5)
                         const Padding(

@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import 'package:uuid/uuid.dart';
 import '../models/user_model.dart';
 import '../models/transaction_model.dart';
+import '../models/project_model.dart';
 
 class ApiService {
   static const String baseUrl =
@@ -76,14 +79,59 @@ class ApiService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchUserProjects() async {
-    final response = await http.get(Uri.parse('$baseUrl/user/projects'));
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as List;
-      return data.map((json) => json as Map<String, dynamic>).toList();
-    } else {
-      throw Exception('Failed to fetch user projects');
+  Future<List<Project>> fetchUserProjects() async {
+    final supabase = Supabase.instance.client;
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User not authenticated');
     }
+
+    final response = await supabase
+        .from('projects')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+
+    return response.map((json) => Project.fromJson(json)).toList();
+  }
+
+  Future<String> createProject({
+    required String name,
+    String status = 'Planning',
+    String? evidenceId,
+    int carbonCredits = 0,
+    int totalValue = 0,
+    double progress = 0.0,
+    String? location,
+    String? type,
+    String? description,
+  }) async {
+    final supabase = Supabase.instance.client;
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final projectData = {
+      'id': const Uuid().v4(),
+      'user_id': userId,
+      'name': name,
+      'status': status,
+      'evidence_id': evidenceId,
+      'carbon_credits': carbonCredits,
+      'total_value': totalValue,
+      'progress': progress,
+      'location': location,
+      'type': type,
+      'description': description,
+      'created_at': DateTime.now().toIso8601String(),
+    };
+
+    final response = await supabase.from('projects').insert(projectData);
+    if (response.isEmpty) {
+      throw Exception('Failed to create project');
+    }
+
+    return projectData['id'] as String;
   }
 }
