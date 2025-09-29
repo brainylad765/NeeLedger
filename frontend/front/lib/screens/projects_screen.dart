@@ -1,9 +1,15 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import '../widgets/custom_button.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'project_details_screen.dart';
+import '../widgets/custom_button.dart';
 
 class ProjectsScreen extends StatefulWidget {
-  static const String routeName = '/projects';
+  static const routeName = '/projects';
 
   const ProjectsScreen({super.key});
 
@@ -12,129 +18,10 @@ class ProjectsScreen extends StatefulWidget {
 }
 
 class _ProjectsScreenState extends State<ProjectsScreen> {
-  final List<Map<String, dynamic>> _projects = [
-    {
-      'id': '1',
-      'name': 'Solar Farm Initiative',
-      'location': 'Mahandi Delta, Odisha',
-      'status': 'Active',
-      'progress': 0.85,
-      'carbonCredits': 1250000,
-      'startDate': '2023-01-15',
-      'endDate': '2025-12-31',
-      'description':
-          'Large-scale solar installation project generating renewable energy and carbon credits.',
-      'investors': 45,
-      'totalValue': 25000000,
-      'type': 'Renewable Energy',
-    },
-    {
-      'id': '2',
-      'name': 'Kutch Conservation',
-      'location': 'Gulf of Kutch, Gujrat',
-      'status': 'Active',
-      'progress': 0.92,
-      'carbonCredits': 850000,
-      'startDate': '2022-06-01',
-      'endDate': '2032-05-31',
-      'description':
-          'Protecting 500,000 hectares of pristine rainforest from deforestation.',
-      'investors': 128,
-      'totalValue': 15000000,
-      'type': 'Conservation',
-    },
-    {
-      'id': '3',
-      'name': 'Wind Energy Project',
-      'location': 'Bhitarkanika',
-      'status': 'Planning',
-      'progress': 0.25,
-      'carbonCredits': 600000,
-      'startDate': '2024-03-01',
-      'endDate': '2026-02-28',
-      'description':
-          'Offshore wind farm development with advanced turbine technology.',
-      'investors': 23,
-      'totalValue': 18000000,
-      'type': 'Renewable Energy',
-    },
-    {
-      'id': '4',
-      'name': 'Ocean Cleanup Initiative',
-      'location': 'Indian Ocean',
-      'status': 'Active',
-      'progress': 0.67,
-      'carbonCredits': 450000,
-      'startDate': '2023-09-01',
-      'endDate': '2025-08-31',
-      'description':
-          'Removing plastic pollution from ocean gyres to restore marine ecosystems.',
-      'investors': 67,
-      'totalValue': 12000000,
-      'type': 'Environmental Cleanup',
-    },
-    {
-      'id': '5',
-      'name': 'Urban Reforestation Program',
-      'location': 'Sunderbans, W.B.',
-      'status': 'Completed',
-      'progress': 1.0,
-      'carbonCredits': 125000,
-      'startDate': '2021-04-01',
-      'endDate': '2023-03-31',
-      'description':
-          'Planting 50,000 trees across urban areas to improve air quality.',
-      'investors': 89,
-      'totalValue': 5000000,
-      'type': 'Reforestation',
-    },
-    {
-      'id': '6',
-      'name': 'Mangrove Restoration Initiative',
-      'location': 'Chilika Lake, Odisha',
-      'status': 'Requested',
-      'progress': 0.0,
-      'carbonCredits': 750000,
-      'startDate': '2024-07-01',
-      'endDate': '2027-06-30',
-      'description':
-          'Restoring mangrove ecosystems to combat coastal erosion and enhance biodiversity.',
-      'investors': 0,
-      'totalValue': 22000000,
-      'type': 'Conservation',
-    },
-    {
-      'id': '7',
-      'name': 'Biogas Plant Network',
-      'location': 'Punjab Agricultural Belt',
-      'status': 'Completed',
-      'progress': 1.0,
-      'carbonCredits': 950000,
-      'startDate': '2020-09-01',
-      'endDate': '2023-08-31',
-      'description':
-          'Converting agricultural waste into biogas for clean energy production.',
-      'investors': 156,
-      'totalValue': 28000000,
-      'type': 'Renewable Energy',
-    },
-    {
-      'id': '8',
-      'name': 'Solar Microgrid Expansion',
-      'location': 'Rajasthan Desert',
-      'status': 'Completed',
-      'progress': 1.0,
-      'carbonCredits': 1800000,
-      'startDate': '2022-02-01',
-      'endDate': '2024-01-31',
-      'description':
-          'Expanding solar microgrids to provide clean energy to remote villages.',
-      'investors': 203,
-      'totalValue': 35000000,
-      'type': 'Renewable Energy',
-    },
-  ];
-
+  final supabase = Supabase.instance.client;
+  List<Map<String, dynamic>> _projects = [];
+  bool _isLoading = true;
+  String? _error;
   String _selectedFilter = 'All';
   final List<String> _filters = [
     'All',
@@ -145,24 +32,153 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    final filteredProjects = _selectedFilter == 'All'
-        ? _projects
-        : _projects
-              .where((project) => project['status'] == _selectedFilter)
-              .toList();
+  void initState() {
+    super.initState();
+    _fetchProjects();
+  }
 
+  Future<void> _fetchProjects() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final res = await supabase
+          .from('projects')
+          .select()
+          .order('created_at', ascending: false);
+
+      // res will be `List<Map<String, dynamic>>` on success
+      setState(() {
+        _projects = res ?? [];
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _uploadDocument() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx'],
+        allowMultiple: false,
+        withData: kIsWeb, // ensure bytes are available on web
+      );
+      if (result == null || result.files.isEmpty) return;
+
+      final picked = result.files.single;
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${picked.name}';
+      final bucket =
+          'projects'; // ensure this bucket exists in Supabase Storage
+      final user = supabase.auth.currentUser;
+
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Not signed in — cannot upload.')),
+        );
+        return;
+      }
+
+      setState(() => _isLoading = true);
+
+      // Upload differently for web and mobile
+      if (kIsWeb) {
+        // on web we have bytes in picked.bytes
+        if (picked.bytes == null) {
+          throw Exception('No file bytes found on web.');
+        }
+        final Uint8List data = picked.bytes!;
+        // Supabase Flutter supports uploadBinary for web
+        await supabase.storage.from(bucket).uploadBinary(fileName, data);
+      } else {
+        // mobile: use File(path)
+        if (picked.path == null) throw Exception('No file path.');
+        final file = File(picked.path!);
+        await supabase.storage.from(bucket).upload(fileName, file);
+      }
+
+      // Get public URL
+      final publicUrlResponse = supabase.storage
+          .from(bucket)
+          .getPublicUrl(fileName);
+      final fileUrl = publicUrlResponse; // string
+
+      // Insert metadata row into projects table
+      final insertRes = await supabase
+          .from('projects')
+          .insert({
+            'user_id': user.id,
+            'title': picked.name,
+            'file_url': fileUrl,
+            'status': 'Requested', // default status - change if you want
+            'created_at': DateTime.now().toIso8601String(),
+          })
+          .select()
+          .single();
+
+      // success
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Document uploaded and project created.')),
+      );
+
+      // refresh list
+      await _fetchProjects();
+    } catch (e, st) {
+      debugPrint('Upload error: $e\n$st');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+      setState(() => _isLoading = false);
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Color _getStatusColor(String? status) {
+    switch ((status ?? '').toLowerCase()) {
+      case 'active':
+        return const Color(0xFF4CAF50);
+      case 'planning':
+        return const Color(0xFFFF9800);
+      case 'completed':
+        return const Color(0xFF2196F3);
+      case 'requested':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  List<Map<String, dynamic>> get _filteredProjects {
+    if (_selectedFilter == 'All') return _projects;
+    return _projects.where((p) {
+      final s = (p['status'] ?? '').toString().toLowerCase();
+      return s == _selectedFilter.toLowerCase();
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F1416),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _uploadDocument,
+        child: const Icon(Icons.upload_file),
+      ),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 40),
-
-              // Header
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Container(
@@ -187,113 +203,125 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: Colors.white70),
+                    onPressed: _fetchProjects,
+                  ),
                 ],
               ),
+              const SizedBox(height: 16),
 
-              const SizedBox(height: 32),
+              // Filters
+              SizedBox(
+                height: 40,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _filters.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, i) {
+                    final f = _filters[i];
+                    final selected = f == _selectedFilter;
+                    return ChoiceChip(
+                      label: Text(f),
+                      selected: selected,
+                      onSelected: (sel) => setState(() => _selectedFilter = f),
+                      selectedColor: const Color(0xFF0D47A1),
+                      backgroundColor: const Color(0xFF1E1E1E),
+                      labelStyle: TextStyle(
+                        color: selected ? Colors.white : Colors.grey,
+                      ),
+                    );
+                  },
+                ),
+              ),
 
-              // Filter Buttons
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: _filters.map((filter) {
-                    return Container(
-                      margin: const EdgeInsets.only(right: 12),
-                      child: FilterChip(
-                        label: Text(filter),
-                        selected: _selectedFilter == filter,
-                        onSelected: (selected) {
-                          setState(() {
-                            _selectedFilter = filter;
-                          });
+              const SizedBox(height: 18),
+
+              // Body
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : (_error != null)
+                    ? Center(
+                        child: Text(
+                          'Error: $_error',
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      )
+                    : _filteredProjects.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No projects yet. Upload one!',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _filteredProjects.length,
+                        itemBuilder: (context, idx) {
+                          final project = _filteredProjects[idx];
+                          final status =
+                              project['status']?.toString() ?? 'Unknown';
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E1E1E),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _getStatusColor(status).withOpacity(0.6),
+                              ),
+                            ),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                project['title'] ?? 'Untitled',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Status: $status',
+                                    style: TextStyle(color: Colors.grey[400]),
+                                  ),
+                                  if (project['file_url'] != null) ...[
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      project['file_url'].toString(),
+                                      style: TextStyle(
+                                        color: Colors.blue[300],
+                                        fontSize: 12,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(
+                                  Icons.open_in_new,
+                                  color: Colors.white70,
+                                ),
+                                onPressed: () {
+                                  // open project details or launch URL using url_launcher
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => ProjectDetailsScreen(
+                                        project: project,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
                         },
-                        backgroundColor: const Color(0xFF1E1E1E),
-                        selectedColor: const Color(0xFF0D47A1),
-                        checkmarkColor: Colors.white,
-                        labelStyle: TextStyle(
-                          color: _selectedFilter == filter
-                              ? Colors.white
-                              : Colors.grey,
-                        ),
                       ),
-                    );
-                  }).toList(),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Projects List
-              ListView.builder(
-                itemCount: filteredProjects.length,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  final project = filteredProjects[index];
-                  return _buildProjectCard(project);
-                },
-              ),
-
-              const SizedBox(height: 32),
-
-              // Summary Statistics
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E1E),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFF0D47A1).withValues(alpha: 77),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Portfolio Summary',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        _buildSummaryCard(
-                          'Total Projects',
-                          '${_projects.length}',
-                          Icons.business_center,
-                          const Color(0xFF2196F3),
-                        ),
-                        const SizedBox(width: 16),
-                        _buildSummaryCard(
-                          'Active Projects',
-                          '${_projects.where((p) => p['status'] == 'Active').length}',
-                          Icons.play_circle,
-                          const Color(0xFF4CAF50),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        _buildSummaryCard(
-                          'Total Credits',
-                          '${_projects.fold(0, (sum, p) => sum + (p['carbonCredits'] as int))}',
-                          Icons.eco,
-                          const Color(0xFF4CAF50),
-                        ),
-                        const SizedBox(width: 16),
-                        _buildSummaryCard(
-                          'Portfolio Value',
-                          '\$${_projects.fold(0, (sum, p) => sum + (p['totalValue'] as int)) ~/ 1000000}M',
-                          Icons.account_balance,
-                          const Color(0xFFFF9800),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
@@ -301,324 +329,4 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       ),
     );
   }
-
-  Widget _buildProjectCard(Map<String, dynamic> project) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _getStatusColor(project['status']).withValues(alpha: 77),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Project Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      project['name'],
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          color: Colors.grey[400],
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          project['location'],
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(
-                    project['status'],
-                  ).withValues(alpha: 51),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _getStatusColor(project['status'])),
-                ),
-                child: Text(
-                  project['status'],
-                  style: TextStyle(
-                    color: _getStatusColor(project['status']),
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Progress Bar
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Progress',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
-                  ),
-                  Text(
-                    '${((project['progress'] as double) * 100).toInt()}%',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: project['progress'],
-                backgroundColor: Colors.grey[800],
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  _getStatusColor(project['status']),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Project Details
-          Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem(
-                  'Credits',
-                  '${project['carbonCredits'] ~/ 1000}K',
-                  Icons.eco,
-                ),
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                  'Investors',
-                  '${project['investors']}',
-                  Icons.people,
-                ),
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                  'Type',
-                  project['type'],
-                  Icons.category,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Description
-          Text(
-            project['description'],
-            style: TextStyle(color: Colors.grey[400], fontSize: 14),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-
-          const SizedBox(height: 16),
-
-          // Action Buttons
-          Row(
-            children: [
-              Expanded(
-                child: CustomButton(
-                  text: 'More Info',
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ProjectDetailsScreen(project: project),
-                      ),
-                    );
-                  },
-                  backgroundColor: const Color(0xFF0D47A1),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: CustomButton(
-                  text: 'Invest',
-                  onPressed: () {
-                    _showInvestmentDialog(project);
-                  },
-                  backgroundColor: const Color(0xFF4CAF50),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailItem(String label, String value, IconData icon) {
-    return Column(
-      children: [
-        icon == Icons.eco
-            ? ImageIcon(
-                AssetImage('assets/images/logo.png'),
-                color: const Color(0xFF0D47A1),
-                size: 20,
-              )
-            : Icon(icon, color: const Color(0xFF0D47A1), size: 20),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 12)),
-      ],
-    );
-  }
-
-  Widget _buildSummaryCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 77)),
-        ),
-        child: Column(
-          children: [
-            icon == Icons.eco
-                ? ImageIcon(
-                    AssetImage('assets/images/logo.png'),
-                    color: color,
-                    size: 24,
-                  )
-                : Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                color: color,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              title,
-              style: TextStyle(color: Colors.grey[400], fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Active':
-        return const Color(0xFF4CAF50);
-      case 'Planning':
-        return const Color(0xFFFF9800);
-      case 'Completed':
-        return const Color(0xFF2196F3);
-      case 'Requested':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  // Removed _showProjectDetails - now using ProjectDetailsScreen for full window view
-
-  void _showInvestmentDialog(Map<String, dynamic> project) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title: Text(
-          'Invest in ${project['name']}',
-          style: const TextStyle(color: Colors.white),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Project Value: \$${(project['totalValue'] as int) ~/ 1000000}M',
-              style: const TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Investment Amount (\$)',
-                labelStyle: const TextStyle(color: Colors.grey),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey[600]!),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF0D47A1)),
-                ),
-              ),
-              style: const TextStyle(color: Colors.white),
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
-            ),
-            child: const Text('Invest'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Removed unused _buildDetailRow method - now using ProjectDetailsScreen
 }

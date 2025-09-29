@@ -12,6 +12,9 @@ class Project {
   final String? location;
   final String? type;
   final String? description;
+  final String? accountId;
+  final int? creditsIssued;
+  final String? country;
   final DateTime createdAt;
 
   Project({
@@ -26,6 +29,9 @@ class Project {
     this.location,
     this.type,
     this.description,
+    this.accountId,
+    this.creditsIssued,
+    this.country,
     required this.createdAt,
   });
 
@@ -48,6 +54,9 @@ class Project {
       location: json['location'],
       type: json['type'],
       description: json['description'],
+      accountId: json['account_id'],
+      creditsIssued: json['credits_issued'],
+      country: json['country'],
       createdAt: parseDate(json['created_at']),
     );
   }
@@ -56,14 +65,17 @@ class Project {
     return {
       'id': id,
       'user_id': userId,
+      'account_id': accountId,
       'name': name,
       'status': status,
       'evidence_id': evidenceId,
       'carbon_credits': carbonCredits,
+      'credits_issued': creditsIssued,
       'total_value': totalValue,
       'progress': progress,
       'location': location,
       'type': type,
+      'country': country,
       'description': description,
       'created_at': createdAt.toIso8601String(),
     };

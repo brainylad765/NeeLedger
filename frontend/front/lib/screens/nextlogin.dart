@@ -220,7 +220,11 @@ class _NextLoginState extends State<NextLogin> {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text("Login successful!")));
-          // AuthGate will handle navigation
+          // Redirect to dashboard on successful login
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          );
         }
       } else {
         if (mounted) {

@@ -98,14 +98,17 @@ class ProjectProvider with ChangeNotifier {
       final projectData = {
         'id': const Uuid().v4(),
         'user_id': userId,
+        'account_id': 'ACC-DEFAULT',
         'name': name,
         'status': status,
         'evidence_id': evidenceId,
         'carbon_credits': carbonCredits,
+        'credits_issued': 0,
         'total_value': totalValue,
         'progress': progress,
         'location': location,
         'type': type,
+        'country': 'Unknown',
         'description': description,
         'created_at': DateTime.now().toIso8601String(),
       };

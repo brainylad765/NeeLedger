@@ -1,11 +1,8 @@
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/custom_button.dart';
 import '../providers/upload_provider.dart';
 import '../providers/evidence_provider.dart';
@@ -37,6 +34,7 @@ class _DataScreenState extends State<DataScreen> {
   }
 
   Future<void> _pickAndUploadFile() async {
+    final provider = Provider.of<UploadProvider>(context, listen: false);
     try {
       setState(() {
         _isUploading = true;
@@ -51,13 +49,6 @@ class _DataScreenState extends State<DataScreen> {
       );
 
       if (result != null && result.files.isNotEmpty) {
-        final supabase = Supabase.instance.client;
-        final provider = Provider.of<UploadProvider>(context, listen: false);
-        final evidenceProvider = Provider.of<EvidenceProvider>(
-          context,
-          listen: false,
-        );
-
         int currentFile = 0;
         for (final file in result.files) {
           currentFile++;
@@ -69,35 +60,7 @@ class _DataScreenState extends State<DataScreen> {
             _uploadProgress = (currentFile - 1) / result.files.length;
           });
 
-          Uint8List? fileBytes;
-          if (file.bytes != null) {
-            fileBytes = file.bytes;
-          } else if (file.path != null) {
-            fileBytes = await File(file.path!).readAsBytes();
-          } else {
-            continue;
-          }
-
-          String fileName =
-              '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
-
-          // Upload to Supabase Storage
-          final uploadedPath = await supabase.storage
-              .from('uploads')
-              .uploadBinary(
-                fileName,
-                fileBytes!,
-                fileOptions: const FileOptions(
-                  contentType: 'application/octet-stream',
-                ),
-              );
-
-          // Get public URL
-          final publicUrl = supabase.storage
-              .from('uploads')
-              .getPublicUrl(uploadedPath);
-
-          // Add to providers
+          // Use UploadProvider to add PDF and handle upload & project creation
           await provider.addPdf(
             PlatformFile(
               name: file.name,
@@ -106,13 +69,6 @@ class _DataScreenState extends State<DataScreen> {
               path: file.path,
             ),
           );
-
-          if (file.bytes != null) {
-            await evidenceProvider.addPdfEvidence(
-              fileName: file.name,
-              fileBytes: file.bytes!,
-            );
-          }
 
           setState(() {
             _uploadProgress = currentFile / result.files.length;
@@ -158,6 +114,7 @@ class _DataScreenState extends State<DataScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final uploadProvider = Provider.of<UploadProvider>(context);
     return Scaffold(
       backgroundColor: const Color(0xFF0F1416),
       body: SafeArea(
@@ -168,33 +125,34 @@ class _DataScreenState extends State<DataScreen> {
             children: [
               const SizedBox(height: 40),
 
-              // Header
-              Row(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D47A1),
-                      borderRadius: BorderRadius.circular(12),
+              // Header - show only if there are uploads
+              if (uploadProvider.hasUploads)
+                Row(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0D47A1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.cloud_upload,
+                        color: Colors.white,
+                        size: 28,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.cloud_upload,
-                      color: Colors.white,
-                      size: 28,
+                    const SizedBox(width: 16),
+                    const Text(
+                      'Data Upload',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Text(
-                    'Data Upload',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
 
               const SizedBox(height: 32),
 

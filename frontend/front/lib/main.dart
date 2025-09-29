@@ -14,6 +14,7 @@ import 'firebase_options.dart';
 import 'auth_gate.dart'; // ✅ added
 
 import 'utils/constants.dart';
+import 'themes/app_theme.dart';
 
 import 'screens/onboarding_screen.dart';
 import 'screens/welcome_screen.dart';
@@ -27,6 +28,7 @@ import 'screens/market_screen.dart';
 import 'screens/wallet_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/uploads_screen.dart';
+import 'screens/debug_uploads_screen.dart';
 import 'screens/blockzen/login/login_screen.dart';
 import 'screens/blockzen/dashboard_screen.dart';
 import 'providers/user_provider.dart';
@@ -34,7 +36,9 @@ import 'providers/transaction_provider.dart';
 import 'providers/evidence_provider.dart';
 import 'providers/document_provider.dart';
 import 'providers/upload_provider.dart';
+import 'providers/project_provider.dart';
 import 'screens/project_details_screen.dart';
+import 'screens/yourprojects_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,7 +77,17 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (_) => EvidenceProvider()),
         ChangeNotifierProvider(create: (_) => DocumentProvider()),
-        ChangeNotifierProvider(create: (_) => UploadProvider()),
+        ChangeNotifierProvider(
+          create: (_) {
+            final provider = UploadProvider();
+            // Initialize Supabase documents after a short delay to ensure auth is ready
+            Future.delayed(const Duration(milliseconds: 500), () {
+              provider.initialize();
+            });
+            return provider;
+          },
+        ),
+        ChangeNotifierProvider(create: (_) => ProjectProvider()),
       ],
       child: const MyApp(),
     ),
@@ -111,29 +125,12 @@ class MyApp extends StatelessWidget {
             child: MaterialApp(
               title: 'NeeLedger',
               themeMode: ThemeMode.dark,
-              theme: ThemeData(
-                brightness: Brightness.light,
-                textTheme: GoogleFonts.poppinsTextTheme(
-                  Theme.of(context).textTheme,
-                ),
-              ),
-              darkTheme: ThemeData(
-                brightness: Brightness.dark,
-                scaffoldBackgroundColor: kBackground,
-                cardColor: kCard,
-                textTheme: GoogleFonts.poppinsTextTheme(
-                  Theme.of(context).textTheme,
-                ).apply(bodyColor: Colors.white),
-                appBarTheme: const AppBarTheme(backgroundColor: kSurface),
-                colorScheme: ColorScheme.dark(
-                  primary: kAccent,
-                  secondary: kAccent,
-                ),
-              ),
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
               initialRoute: '/',
               debugShowCheckedModeBanner: false, // ✅ added
               routes: {
-                '/': (context) => const AuthGate(),
+                '/': (context) => const WelcomeScreen(),
                 WelcomeScreen.routeName: (context) => const WelcomeScreen(),
                 OnboardingScreen.routeName: (context) =>
                     const OnboardingScreen(),
@@ -152,6 +149,9 @@ class MyApp extends StatelessWidget {
                 BlockZenDashboardScreen.routeName: (context) =>
                     const BlockZenDashboardScreen(),
                 UploadsScreen.routeName: (context) => const UploadsScreen(),
+                DebugUploadsScreen.routeName: (context) =>
+                    const DebugUploadsScreen(),
+                '/your-projects': (context) => const YourProjectsScreen(),
               },
             ),
           ),

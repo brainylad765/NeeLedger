@@ -205,10 +205,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Consumer<UserProvider>(
               builder: (context, userProvider, child) {
                 final user = userProvider.currentUser;
+                String displayName = 'User';
+                String displayEmail = '';
+
                 if (user != null) {
-                  _nameController.text = user.name;
-                  _emailController.text = user.email;
+                  displayEmail = user.email;
+                  // Extract username from email (part before @)
+                  displayName = user.email.split('@').first;
+                  _nameController.text = displayName;
+                  _emailController.text = displayEmail;
                 }
+
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Container(
@@ -237,7 +244,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      _nameController.text,
+                                      displayName,
                                       style: const TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.bold,
@@ -256,7 +263,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                _emailController.text,
+                                displayEmail,
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.grey,

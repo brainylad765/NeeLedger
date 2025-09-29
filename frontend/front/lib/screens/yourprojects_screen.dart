@@ -6,10 +6,15 @@ import '../models/project_model.dart';
 import '../widgets/custom_button.dart';
 import 'project_details_screen.dart';
 
-class YourProjectsScreen extends StatelessWidget {
-  YourProjectsScreen({Key? key}) : super(key: key);
+class YourProjectsScreen extends StatefulWidget {
+  const YourProjectsScreen({Key? key}) : super(key: key);
   static const routeName = '/your-projects';
 
+  @override
+  State<YourProjectsScreen> createState() => _YourProjectsScreenState();
+}
+
+class _YourProjectsScreenState extends State<YourProjectsScreen> {
   String _selectedFilter = 'All';
   final List<String> _filters = ['All', 'Active', 'Planning', 'Completed'];
 
@@ -135,7 +140,9 @@ class YourProjectsScreen extends StatelessWidget {
                             selected: _selectedFilter == filter,
                             onSelected: (selected) {
                               if (selected) {
-                                _selectedFilter = filter;
+                                setState(() {
+                                  _selectedFilter = filter;
+                                });
                               }
                             },
                             backgroundColor: const Color(0xFF1E1E1E),
@@ -432,7 +439,7 @@ class YourProjectsScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  backgroundColor: const Color(0xFF0D47A1),
+                  variant: CustomButtonVariant.primary,
                 ),
               ),
               const SizedBox(width: 12),
@@ -442,7 +449,7 @@ class YourProjectsScreen extends StatelessWidget {
                   onPressed: () {
                     _showInvestmentDialog(context, project);
                   },
-                  backgroundColor: const Color(0xFF4CAF50),
+                  variant: CustomButtonVariant.secondary,
                 ),
               ),
             ],

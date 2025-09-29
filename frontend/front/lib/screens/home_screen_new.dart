@@ -90,6 +90,51 @@ class _HomeScreenState extends State<HomeScreen> {
       'totalValue': 5000000,
       'type': 'Reforestation',
     },
+    {
+      'id': '6',
+      'name': 'Urban Reforestation Program 2',
+      'location': 'Sunderbans, W.B.',
+      'status': 'Completed',
+      'progress': 1.0,
+      'carbonCredits': 125000,
+      'startDate': '2021-04-01',
+      'endDate': '2023-03-31',
+      'description':
+          'Planting 50,000 trees across urban areas to improve air quality.',
+      'investors': 89,
+      'totalValue': 5000000,
+      'type': 'Reforestation',
+    },
+    {
+      'id': '7',
+      'name': 'Urban Reforestation Program 3',
+      'location': 'Sunderbans, W.B.',
+      'status': 'Completed',
+      'progress': 1.0,
+      'carbonCredits': 125000,
+      'startDate': '2021-04-01',
+      'endDate': '2023-03-31',
+      'description':
+          'Planting 50,000 trees across urban areas to improve air quality.',
+      'investors': 89,
+      'totalValue': 5000000,
+      'type': 'Reforestation',
+    },
+    {
+      'id': '8',
+      'name': 'Urban Reforestation Program 4',
+      'location': 'Sunderbans, W.B.',
+      'status': 'Completed',
+      'progress': 1.0,
+      'carbonCredits': 125000,
+      'startDate': '2021-04-01',
+      'endDate': '2023-03-31',
+      'description':
+          'Planting 50,000 trees across urban areas to improve air quality.',
+      'investors': 89,
+      'totalValue': 5000000,
+      'type': 'Reforestation',
+    },
   ];
 
   @override
