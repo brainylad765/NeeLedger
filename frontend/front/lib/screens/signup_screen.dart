@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:front/screens/login_screen.dart';
 import 'package:front/screens/dashboard_screen.dart';
+import 'package:front/auth_repository.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -13,7 +14,7 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  final supabase = Supabase.instance.client;
+  final AuthRepository _authRepository = AuthRepository();
 
   // Controllers
   final TextEditingController _fullNameController = TextEditingController();
@@ -27,28 +28,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
       try {
-        final authResponse = await supabase.auth.signUp(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-          data: {
-            'full_name': _fullNameController.text.trim(),
-            'mobile': _mobileController.text.trim(),
-            'role': _selectedRole,
-            'kyb_link': _kybController.text.trim(),
-          },
+        final userCredential = await _authRepository.signUp(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
+
+        await _authRepository.createProfile(
+          userId: userCredential.user!.uid,
+          fullName: _fullNameController.text.trim(),
+          mobile: _mobileController.text.trim(),
+          isProjectProponent: _selectedRole == 'Admin',
+          hasCompletedKYC: false,
         );
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Signup successful! Please check your email for verification.'),
+              content: Text(
+                'Signup successful! Please check your email for verification.',
+              ),
             ),
           );
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const LoginScreen()),
           );
         }
-      } on AuthException catch (e) {
+      } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Signup Failed: ${e.message}'),
@@ -127,8 +132,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       borderSide: BorderSide(color: primaryColor),
                     ),
                   ),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Enter mobile number' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Enter mobile number'
+                      : null,
                 ),
                 const SizedBox(height: 16),
 
@@ -192,8 +198,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     DropdownMenuItem(value: 'User', child: Text('User')),
                   ],
                   onChanged: (value) => setState(() => _selectedRole = value),
-                  validator: (value) =>
-                      value == null ? 'Select a role' : null,
+                  validator: (value) => value == null ? 'Select a role' : null,
                 ),
                 const SizedBox(height: 16),
 
@@ -243,10 +248,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: Container(
-                        height: 1,
-                        color: Colors.white24,
-                      ),
+                      child: Container(height: 1, color: Colors.white24),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -260,10 +262,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
                     Expanded(
-                      child: Container(
-                        height: 1,
-                        color: Colors.white24,
-                      ),
+                      child: Container(height: 1, color: Colors.white24),
                     ),
                   ],
                 ),
@@ -315,38 +314,39 @@ class _LoginSection extends StatefulWidget {
 
 class _LoginSectionState extends State<_LoginSection> {
   final _loginFormKey = GlobalKey<FormState>();
-  final supabase = Supabase.instance.client;
-  
+  final AuthRepository _authRepository = AuthRepository();
+
   // Login Controllers
   final TextEditingController _loginEmailController = TextEditingController();
-  final TextEditingController _loginPasswordController = TextEditingController();
-  
+  final TextEditingController _loginPasswordController =
+      TextEditingController();
+
   bool _isLoggingIn = false;
-  
+
   Future<void> _login() async {
     if (_loginFormKey.currentState!.validate()) {
       setState(() {
         _isLoggingIn = true;
       });
-      
+
       try {
-        final authResponse = await supabase.auth.signInWithPassword(
-          email: _loginEmailController.text.trim(),
-          password: _loginPasswordController.text.trim(),
+        final userCredential = await _authRepository.signIn(
+          _loginEmailController.text.trim(),
+          _loginPasswordController.text.trim(),
         );
 
-        if (authResponse.user != null && mounted) {
+        if (userCredential.user != null && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Login successful!'),
               backgroundColor: Colors.green,
             ),
           );
-          
+
           // Navigate directly to dashboard, bypassing KYC
           Navigator.of(context).pushReplacementNamed(DashboardScreen.routeName);
         }
-      } on AuthException catch (e) {
+      } on FirebaseAuthException catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -373,18 +373,18 @@ class _LoginSectionState extends State<_LoginSection> {
       }
     }
   }
-  
+
   @override
   void dispose() {
     _loginEmailController.dispose();
     _loginPasswordController.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     const primaryColor = Colors.lightBlueAccent;
-    
+
     return Form(
       key: _loginFormKey,
       child: Column(
@@ -408,7 +408,7 @@ class _LoginSectionState extends State<_LoginSection> {
                 value == null || value.isEmpty ? 'Enter email' : null,
           ),
           const SizedBox(height: 16),
-          
+
           // Login Password
           TextFormField(
             controller: _loginPasswordController,
@@ -428,7 +428,7 @@ class _LoginSectionState extends State<_LoginSection> {
                 value == null || value.isEmpty ? 'Enter password' : null,
           ),
           const SizedBox(height: 24),
-          
+
           // Login Button
           SizedBox(
             width: double.infinity,

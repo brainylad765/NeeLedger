@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:provider/provider.dart';
 import '../widgets/custom_button.dart';
 import '../providers/upload_provider.dart';
@@ -24,7 +26,7 @@ class _DataScreenState extends State<DataScreen> {
   @override
   void initState() {
     super.initState();
-    _requestPermissions();
+    _requestPermissions(); // directly request permissions on start
   }
 
   Future<void> _requestPermissions() async {
@@ -34,12 +36,10 @@ class _DataScreenState extends State<DataScreen> {
   }
 
   Future<void> _pickAndUploadFile() async {
-    final provider = Provider.of<UploadProvider>(context, listen: false);
     try {
       setState(() {
         _isUploading = true;
-        _uploadStatus = 'Selecting file...';
-        _uploadProgress = 0.0;
+          _uploadStatus = 'Selecting file...';
       });
 
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -49,58 +49,70 @@ class _DataScreenState extends State<DataScreen> {
       );
 
       if (result != null && result.files.isNotEmpty) {
-        int currentFile = 0;
+        final provider = Provider.of<UploadProvider>(context, listen: false);
+        final evidenceProvider =
+            Provider.of<EvidenceProvider>(context, listen: false);
+        
         for (final file in result.files) {
-          currentFile++;
-          if (file.path == null && file.bytes == null) continue;
+          if (file.path == null) continue;
 
-          setState(() {
-            _uploadStatus =
-                'Uploading ${file.name} (${currentFile}/${result.files.length})...';
-            _uploadProgress = (currentFile - 1) / result.files.length;
+          File localFile = File(file.path!);
+          String fileName =
+              '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+
+          // 🔥 Firebase Storage upload
+          final storageRef =
+              FirebaseStorage.instance.ref().child('uploads/$fileName');
+
+          UploadTask uploadTask = storageRef.putFile(localFile);
+
+          uploadTask.snapshotEvents.listen((event) {
+            setState(() {
+              _uploadProgress =
+                  event.bytesTransferred / event.totalBytes.toDouble();
+              _uploadStatus =
+                  'Uploading ${file.name}... ${(_uploadProgress * 100).toStringAsFixed(0)}%';
+            });
           });
 
-          // Use UploadProvider to add PDF and handle upload & project creation
-          await provider.addPdf(
-            PlatformFile(
-              name: file.name,
-              size: file.size,
-              bytes: file.bytes,
-              path: file.path,
+          final snapshot = await uploadTask;
+          final downloadUrl = await snapshot.ref.getDownloadURL();
+
+          // save locally in providers
+          await provider.addPdf(file);
+          if (file.bytes != null) {
+            await evidenceProvider.addPdfEvidence(
+              fileName: file.name,
+              fileBytes: file.bytes!,
+            );
+          }
+
+          setState(() {
+            _uploadStatus = 'Uploaded ${file.name} ✅';
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${file.name} uploaded successfully'),
+              backgroundColor: Colors.green,
             ),
           );
-
-          setState(() {
-            _uploadProgress = currentFile / result.files.length;
-          });
         }
 
         setState(() {
-          _uploadStatus = 'All files uploaded successfully! ✅';
-          _isUploading = false;
-          _uploadProgress = 1.0;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${result.files.length} file(s) uploaded successfully',
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        setState(() {
-          _uploadStatus = '';
           _isUploading = false;
           _uploadProgress = 0.0;
+        });
+      } else {
+        setState(() {
+          _isUploading = false;
+          _uploadStatus = '';
         });
       }
     } catch (e) {
       setState(() {
         _uploadStatus = 'Upload failed: $e';
         _isUploading = false;
-        _uploadProgress = 0.0;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -114,7 +126,6 @@ class _DataScreenState extends State<DataScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final uploadProvider = Provider.of<UploadProvider>(context);
     return Scaffold(
       backgroundColor: const Color(0xFF0F1416),
       body: SafeArea(
@@ -125,34 +136,33 @@ class _DataScreenState extends State<DataScreen> {
             children: [
               const SizedBox(height: 40),
 
-              // Header - show only if there are uploads
-              if (uploadProvider.hasUploads)
-                Row(
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0D47A1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.cloud_upload,
-                        color: Colors.white,
-                        size: 28,
-                      ),
+              // Header
+              Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D47A1),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 16),
-                    const Text(
-                      'Data Upload',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: const Icon(
+                      Icons.cloud_upload,
+                      color: Colors.white,
+                      size: 28,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Text(
+                    'Data Upload',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
 
               const SizedBox(height: 32),
 
@@ -183,9 +193,8 @@ class _DataScreenState extends State<DataScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: CustomButton(
-                        text: _isUploading
-                            ? 'Uploading...'
-                            : 'Select & Upload File',
+                        text:
+                            _isUploading ? 'Uploading...' : 'Select & Upload File',
                         onPressed: _isUploading ? () {} : _pickAndUploadFile,
                       ),
                     ),
@@ -198,7 +207,7 @@ class _DataScreenState extends State<DataScreen> {
                             LinearProgressIndicator(
                               value: _isUploading ? _uploadProgress : null,
                               backgroundColor: Colors.grey[800],
-                              color: const Color(0xFF0D47A1),
+                              color: Colors.blue,
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -217,16 +226,15 @@ class _DataScreenState extends State<DataScreen> {
 
               const SizedBox(height: 32),
 
-              // Evidence History
-              Consumer<EvidenceProvider>(
-                builder: (context, evidenceProvider, child) {
-                  if (evidenceProvider.items.isEmpty)
-                    return const SizedBox.shrink();
+              // Upload History
+              Consumer<UploadProvider>(
+                builder: (context, provider, child) {
+                  if (provider.pdfs.isEmpty) return const SizedBox.shrink();
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Evidence History',
+                        'Recent Uploads',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -235,11 +243,11 @@ class _DataScreenState extends State<DataScreen> {
                       ),
                       const SizedBox(height: 16),
                       ListView.builder(
-                        itemCount: evidenceProvider.items.length,
+                        itemCount: provider.pdfs.length,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemBuilder: (context, index) {
-                          final evidence = evidenceProvider.items[index];
+                          final pdf = provider.pdfs[index];
                           return Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(12),
@@ -255,37 +263,12 @@ class _DataScreenState extends State<DataScreen> {
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        evidence.filePath.split('/').last,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      if (evidence.latitude != null &&
-                                          evidence.longitude != null)
-                                        Text(
-                                          '${evidence.latitude!.toStringAsFixed(4)}, ${evidence.longitude!.toStringAsFixed(4)}',
-                                          style: const TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      Text(
-                                        evidence.timestamp.toString().split(
-                                          'T',
-                                        )[0],
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    pdf.name,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
                                 const Spacer(),

@@ -220,11 +220,8 @@ class _NextLoginState extends State<NextLogin> {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text("Login successful!")));
-          // Redirect to dashboard on successful login
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const DashboardScreen()),
-          );
+          // Redirect to home screen on successful login
+          Navigator.pushReplacementNamed(context, '/home');
         }
       } else {
         if (mounted) {

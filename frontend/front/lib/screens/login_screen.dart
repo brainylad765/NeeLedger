@@ -197,29 +197,29 @@ class _LoginScreenState extends State<LoginScreen> {
                         emailController.text.trim(),
                         passwordController.text.trim(),
                       );
-                  if (response.user != null) {
-                    // Create profile
-                    await _authRepo.createProfile(
-                      userId: response.user!.id,
-                      fullName: fullNameController.text.trim(),
-                      mobile: mobileController.text.trim(),
-                      isProjectProponent: isProjectProponent,
-                      hasCompletedKYC: hasCompletedKYC,
-                    );
-                    // Redirect to dashboard on successful signup
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Sign up initiated. Check your email for confirmation.',
-                        ),
-                      ),
-                    );
-                  }
+                      if (response.user != null) {
+                        // Create profile
+                        await _authRepo.createProfile(
+                          userId: response.user!.uid,
+                          fullName: fullNameController.text.trim(),
+                          mobile: mobileController.text.trim(),
+                          isProjectProponent: isProjectProponent,
+                          hasCompletedKYC: hasCompletedKYC,
+                        );
+                        // Redirect to payment verification (KYC) on successful signup
+                        Navigator.pushReplacementNamed(
+                          context,
+                          '/payment-verification',
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Sign up initiated. Check your email for confirmation.',
+                            ),
+                          ),
+                        );
+                      }
                     } on AuthException catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error: ${e.message}')),

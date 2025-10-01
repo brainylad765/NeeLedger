@@ -9,7 +9,6 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // ✅ merged import
 import 'firebase_options.dart';
 import 'auth_gate.dart'; // ✅ added
 
@@ -37,21 +36,16 @@ import 'providers/evidence_provider.dart';
 import 'providers/document_provider.dart';
 import 'providers/upload_provider.dart';
 import 'providers/project_provider.dart';
-import 'screens/project_details_screen.dart';
+import 'providers/buffer_pool_provider.dart';
 import 'screens/yourprojects_screen.dart';
+import 'screens/buffer_pool_screen.dart';
+import 'screens/nextlogin.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // ✅ Firebase initialization
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // ✅ Supabase initialization merged
-  await Supabase.initialize(
-    url: 'https://sdnwzesuiulljxmwxpob.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbnd6ZXN1aXVsbGp4bXd4cG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNDk5NjEsImV4cCI6MjA3NDYyNTk2MX0.cHjCwwKpq7s1EjNWP-1dzXHnnd8iNP-9MdBGNeC9Jas',
-  );
 
   // ✅ WebView setup only for Android devices
   if (!kIsWeb) {
@@ -77,17 +71,9 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (_) => EvidenceProvider()),
         ChangeNotifierProvider(create: (_) => DocumentProvider()),
-        ChangeNotifierProvider(
-          create: (_) {
-            final provider = UploadProvider();
-            // Initialize Supabase documents after a short delay to ensure auth is ready
-            Future.delayed(const Duration(milliseconds: 500), () {
-              provider.initialize();
-            });
-            return provider;
-          },
-        ),
+        ChangeNotifierProvider(create: (_) => UploadProvider()),
         ChangeNotifierProvider(create: (_) => ProjectProvider()),
+        ChangeNotifierProvider(create: (_) => BufferPoolProvider()),
       ],
       child: const MyApp(),
     ),
@@ -127,8 +113,9 @@ class MyApp extends StatelessWidget {
               themeMode: ThemeMode.dark,
               theme: AppTheme.lightTheme,
               darkTheme: AppTheme.darkTheme,
-              initialRoute: '/',
+              // initialRoute: '/',  // Removed to force home screen
               debugShowCheckedModeBanner: false, // ✅ added
+              // Removed home to avoid conflict with '/' route
               routes: {
                 '/': (context) => const WelcomeScreen(),
                 WelcomeScreen.routeName: (context) => const WelcomeScreen(),
@@ -152,6 +139,9 @@ class MyApp extends StatelessWidget {
                 DebugUploadsScreen.routeName: (context) =>
                     const DebugUploadsScreen(),
                 '/your-projects': (context) => const YourProjectsScreen(),
+                '/nextlogin': (context) => const NextLogin(),
+                BufferPoolScreen.routeName: (context) =>
+                    const BufferPoolScreen(),
               },
             ),
           ),

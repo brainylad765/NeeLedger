@@ -1,37 +1,60 @@
-# Supabase Integration Task Progress
+# Firebase Migration TODO
 
-## Current Work
-Implementing Supabase integration for the NeeLedger Flutter app using provided URL and anon key. Code integration is complete; focusing on schema setup and model updates.
+## Migration from Supabase to Firebase
 
-## Key Technical Concepts
-- Supabase Flutter SDK for auth, DB (Postgres), storage.
-- RLS policies for user isolation.
-- Real-time subscriptions via channels.
-- Provider pattern for state management.
-- UUID for IDs, geolocation in uploads.
+### Phase 1: Dependencies and Auth
+- [ ] Remove supabase_flutter dependency from pubspec.yaml
+- [x] Update signup_screen.dart to use Firebase Auth instead of Supabase
+- [ ] Update login_screen.dart to use Firebase Auth instead of Supabase
+- [ ] Update nextlogin.dart to use Firebase Auth instead of Supabase
 
-## Relevant Files and Code
-- **frontend/front/lib/main.dart**: Supabase initialization with provided URL/key.
-  - Code: `await Supabase.initialize(url: 'https://sdnwzesuiulljxmwxpob.supabase.co', anonKey: '...');`
-- **frontend/front/lib/models/project_model.dart**: Updated with new fields (account_id, credits_issued, country).
-  - Changes: Added optional fields in constructor, fromJson, toJson.
-- **frontend/front/create-database-schema.sql**: New complete schema file for projects/documents tables, buckets, RLS, indexes.
-  - Includes new columns: account_id, credits_issued, country.
-- **frontend/front/test-supabase-connection.js**: New test script for connection verification (skipping execution).
-- **frontend/front/lib/providers/project_provider.dart**: Pending update for new fields in createProject.
-- **frontend/front/SUPABASE_INTEGRATION_GUIDE.md**: Pending update with new schema/test references.
+### Phase 2: Data Storage Migration
+- [ ] Migrate upload_provider.dart from Supabase storage to Firebase Storage/Firestore
+- [ ] Migrate document_upload_service.dart to Firebase Storage/Firestore
+- [ ] Migrate api_service.dart project operations to Firestore
+- [ ] Migrate projects_screen.dart to Firestore
+- [ ] Migrate dashboard_screen.dart to Firestore
 
-## Problem Solving
-- Schema mismatch resolved by adding missing columns from guide.
-- Model updates ensure compatibility without breaking existing code.
-- No auth changes needed; login/signup already use Supabase.
+### Phase 3: Testing and Cleanup
+- [ ] Update any other files using Supabase
+- [ ] Test Firebase Auth flows (sign up, sign in, sign out)
+- [ ] Test Firebase Storage operations
+- [ ] Test Firestore data operations
+- [ ] Run flutter pub get after dependency changes
+- [ ] Clean up any remaining Supabase references
 
-## Pending Tasks and Next Steps
-- [x] Create/update database schema (create-database-schema.sql) - Run in Supabase SQL Editor.
-- [x] Update project_provider.dart: Add new fields (accountId, creditsIssued, country) to createProject method. Quote from conversation: "Update to handle optional fields (e.g., account_id, country from guide) in createProject and fromJson for future-proofing."
-- [x] Update SUPABASE_INTEGRATION_GUIDE.md: Add references to new schema.sql and test script.
-- [ ] (Skipped) Run test-supabase-connection.js after npm install @supabase/supabase-js.
-- [ ] (Skipped) Test app: flutter run, create project/upload, verify data in Supabase dashboard.
-- [ ] If RLS errors, run fix-rls-policy.sql from existing guide.
+---
 
-After completing updates, the integration is fully implemented. User can run schema in Supabase dashboard for DB setup.
+# Django Backend Development
+
+## Backend Setup
+- [x] Create Django project structure
+- [x] Configure Django settings with apps and middleware
+- [x] Create requirements.txt with dependencies
+- [x] Set up custom User model with roles
+
+## Models Created
+- [x] accounts/models.py - Custom User model with roles and Firebase integration
+- [x] projects/models.py - Project, ProjectImage, ProjectDocument models
+- [x] transactions/models.py - Transaction, CreditWallet, CreditHolding models
+- [x] evidence/models.py - Evidence, EvidenceComment, EvidenceRevision models
+
+## Admin Interface
+- [x] accounts/admin.py - Custom user admin
+- [x] projects/admin.py - Project management admin
+- [x] transactions/admin.py - Transaction and wallet admin
+- [x] evidence/admin.py - Evidence management admin
+
+## API Development (Next Steps)
+- [x] accounts/serializers.py - User serializers for API
+- [ ] Create serializers for projects, transactions, evidence
+- [ ] Create API views for all models
+- [ ] Set up URL routing
+- [ ] Add authentication and permissions
+- [ ] Create API documentation
+
+## Testing and Deployment
+- [ ] Write unit tests for models and views
+- [ ] Set up CI/CD pipeline
+- [ ] Configure production settings
+- [ ] Deploy to production server

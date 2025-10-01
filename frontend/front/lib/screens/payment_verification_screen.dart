@@ -20,7 +20,7 @@ class _PaymentVerificationScreenState extends State<PaymentVerificationScreen> {
   final TextEditingController corporationIdController = TextEditingController();
   final TextEditingController panCardController = TextEditingController();
   final TextEditingController gstinController = TextEditingController();
-  
+
   String? _uploadedPaymentProof;
   bool _isUploadingProof = false;
 
@@ -162,10 +162,10 @@ class _PaymentVerificationScreenState extends State<PaymentVerificationScreen> {
                   color: const Color(0xFF1E1E1E),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _uploadedPaymentProof != null 
-                        ? Colors.green 
-                        : const Color(0xFF0D47A1), 
-                    width: 1
+                    color: _uploadedPaymentProof != null
+                        ? Colors.green
+                        : const Color(0xFF0D47A1),
+                    width: 1,
                   ),
                 ),
                 child: Column(
@@ -174,11 +174,11 @@ class _PaymentVerificationScreenState extends State<PaymentVerificationScreen> {
                     Row(
                       children: [
                         Icon(
-                          _uploadedPaymentProof != null 
-                              ? Icons.check_circle 
+                          _uploadedPaymentProof != null
+                              ? Icons.check_circle
                               : Icons.upload_file,
-                          color: _uploadedPaymentProof != null 
-                              ? Colors.green 
+                          color: _uploadedPaymentProof != null
+                              ? Colors.green
                               : const Color(0xFF0D47A1),
                         ),
                         const SizedBox(width: 8),
@@ -204,10 +204,12 @@ class _PaymentVerificationScreenState extends State<PaymentVerificationScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: _isUploadingProof ? null : _uploadPaymentProof,
+                        onPressed: _isUploadingProof
+                            ? null
+                            : _uploadPaymentProof,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _uploadedPaymentProof != null 
-                              ? Colors.green 
+                          backgroundColor: _uploadedPaymentProof != null
+                              ? Colors.green
                               : const Color(0xFF0D47A1),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
@@ -220,20 +222,22 @@ class _PaymentVerificationScreenState extends State<PaymentVerificationScreen> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : Icon(
-                                _uploadedPaymentProof != null 
-                                    ? Icons.check_circle 
+                                _uploadedPaymentProof != null
+                                    ? Icons.check_circle
                                     : Icons.upload_file,
                               ),
                         label: Text(
                           _isUploadingProof
                               ? 'Uploading...'
                               : _uploadedPaymentProof != null
-                                  ? 'Payment Proof Uploaded'
-                                  : 'Select PDF File',
+                              ? 'Payment Proof Uploaded'
+                              : 'Select PDF File',
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -400,9 +404,12 @@ class _PaymentVerificationScreenState extends State<PaymentVerificationScreen> {
 
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;
-        
+
         // Add to upload provider for backend storage
-        final uploadProvider = Provider.of<UploadProvider>(context, listen: false);
+        final uploadProvider = Provider.of<UploadProvider>(
+          context,
+          listen: false,
+        );
         await uploadProvider.addPdf(file);
 
         setState(() {
@@ -476,7 +483,7 @@ class _PaymentVerificationScreenState extends State<PaymentVerificationScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Success! KYC completed. Returning to login.',
+          'Success! KYC completed. Proceeding to login.',
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.green,
@@ -484,9 +491,9 @@ class _PaymentVerificationScreenState extends State<PaymentVerificationScreen> {
       ),
     );
 
-    // Return true to indicate KYC completion
+    // Proceed to next login
     Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pop(context, true);
+      Navigator.pushReplacementNamed(context, '/nextlogin');
     });
   }
 }

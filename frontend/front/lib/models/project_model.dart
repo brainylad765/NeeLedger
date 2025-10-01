@@ -1,4 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+// Removed Supabase import - using Firebase Firestore instead
 
 class Project {
   final String id;

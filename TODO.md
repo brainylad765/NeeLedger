@@ -1,9 +1,10 @@
-# TODO: Integrate data_screen.dart with uploads_screen.dart via UploadProvider and Supabase Projects
-
-## Steps to Complete
-
-- [x] Enhance UploadProvider to create projects in Supabase when files are uploaded
-- [x] Modify data_screen.dart to use UploadProvider for uploads
-- [x] Modify data_screen.dart to display heading conditionally based on uploads
-- [x] Refactor uploads_screen.dart to use UploadProvider methods for uploads and project creation
-- [x] Test integration and ensure seamless functionality
+- [ ] Remove Firebase and Supabase dependencies from frontend/front/pubspec.yaml
+- [ ] Remove firebase-admin from backend/requirements.txt
+- [ ] Delete Firebase/Supabase related files: firebase_options.dart, firebase.json, test-supabase-connection.js, test-supabase-documents.js, test_firebase.html, SUPABASE_INTEGRATION_GUIDE.md, supabase_documents_schema.sql, create-database-schema.sql, dataconnect/, firebase-functions/, functions/
+- [ ] Modify frontend/front/lib/main.dart: remove Firebase initialization and Supabase init in UploadProvider
+- [ ] Modify frontend/front/lib/auth_repository.dart: remove Firebase code, make auth local or stub
+- [ ] Modify frontend/front/lib/auth_gate.dart: remove Firebase auth check, allow access
+- [ ] Modify frontend/front/lib/providers/upload_provider.dart: remove Supabase code, keep local uploads
+- [ ] Check and modify other files for Firebase/Supabase imports
+- [ ] Run flutter pub get
+- [ ] Test build

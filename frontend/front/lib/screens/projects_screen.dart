@@ -1,12 +1,27 @@
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'project_details_screen.dart';
-import '../widgets/custom_button.dart';
+// NOTE: External imports like file_picker, supabase, project_details_screen,
+// and custom_button are removed as this is a UI replica with static data.
+
+// Mock Project Details Screen for navigation placeholder
+class ProjectDetailsScreen extends StatelessWidget {
+  final Map<String, dynamic> project;
+  const ProjectDetailsScreen({super.key, required this.project});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(project['title'] ?? 'Details'),
+        backgroundColor: const Color(0xFF0F1416),
+      ),
+      body: Center(
+        child: Text('Details for ${project['title']}', style: const TextStyle(color: Colors.white)),
+      ),
+      backgroundColor: const Color(0xFF0F1416),
+    );
+  }
+}
 
 class ProjectsScreen extends StatefulWidget {
   static const routeName = '/projects';
@@ -18,125 +33,96 @@ class ProjectsScreen extends StatefulWidget {
 }
 
 class _ProjectsScreenState extends State<ProjectsScreen> {
-  final supabase = Supabase.instance.client;
+  // --- Static Project Data (8 Projects) ---
+  final List<Map<String, dynamic>> _allProjects = [
+    {
+      'id': 1,
+      'title': 'E-Commerce Replatforming',
+      'status': 'Active',
+      'file_url': 'https://docs.link/ec-replatform-v3.pdf',
+      'created_at': DateTime.now().subtract(const Duration(days: 5)).toIso8601String(),
+    },
+    {
+      'id': 2,
+      'title': 'Mobile App V2 Launch',
+      'status': 'Completed',
+      'file_url': 'https://docs.link/mobile-app-v2.pdf',
+      'created_at': DateTime.now().subtract(const Duration(days: 15)).toIso8601String(),
+    },
+    {
+      'id': 3,
+      'title': 'Q3 Marketing Campaign',
+      'status': 'Planning',
+      'file_url': 'https://docs.link/q3-marketing-plan.docx',
+      'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
+    },
+    {
+      'id': 4,
+      'title': 'Data Warehouse Migration',
+      'status': 'Active',
+      'file_url': 'https://docs.link/dw-migration-sow.pdf',
+      'created_at': DateTime.now().subtract(const Duration(days: 10)).toIso8601String(),
+    },
+    {
+      'id': 5,
+      'title': 'New Client Onboarding Flow',
+      'status': 'Requested',
+      'file_url': 'https://docs.link/onboarding-request.doc',
+      'created_at': DateTime.now().subtract(const Duration(days: 2)).toIso8601String(),
+    },
+    {
+      'id': 6,
+      'title': 'Server Infrastructure Upgrade',
+      'status': 'Completed',
+      'file_url': 'https://docs.link/server-upgrade-report.pdf',
+      'created_at': DateTime.now().subtract(const Duration(days: 20)).toIso8601String(),
+    },
+    {
+      'id': 7,
+      'title': 'Internal Tool Development',
+      'status': 'Planning',
+      'file_url': 'https://docs.link/internal-tool-spec.docx',
+      'created_at': DateTime.now().subtract(const Duration(hours: 12)).toIso8601String(),
+    },
+    {
+      'id': 8,
+      'title': 'Annual Budget Review 2026',
+      'status': 'Active',
+      'file_url': 'https://docs.link/budget-2026-draft.pdf',
+      'created_at': DateTime.now().subtract(const Duration(days: 7)).toIso8601String(),
+    },
+  ];
+
   List<Map<String, dynamic>> _projects = [];
-  bool _isLoading = true;
+  bool _isLoading = false; // Set to false since data is static
   String? _error;
   String _selectedFilter = 'All';
-  final List<String> _filters = [
-    'All',
-    'Active',
-    'Planning',
-    'Completed',
-    'Requested',
-  ];
+  final List<String> _filters = ['All', 'Active', 'Planning', 'Completed', 'Requested'];
 
   @override
   void initState() {
     super.initState();
-    _fetchProjects();
+    // Simulate fetching/loading with static data
+    _loadStaticProjects();
   }
 
-  Future<void> _fetchProjects() async {
+  void _loadStaticProjects() {
+    // Sort statically by 'created_at' to mimic 'order by' from the original code
+    _allProjects.sort((a, b) => b['created_at'].compareTo(a['created_at']));
     setState(() {
-      _isLoading = true;
-      _error = null;
+      _projects = _allProjects;
+      _isLoading = false;
     });
-
-    try {
-      final res = await supabase
-          .from('projects')
-          .select()
-          .order('created_at', ascending: false);
-
-      // res will be `List<Map<String, dynamic>>` on success
-      setState(() {
-        _projects = res ?? [];
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
   }
 
-  Future<void> _uploadDocument() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx'],
-        allowMultiple: false,
-        withData: kIsWeb, // ensure bytes are available on web
-      );
-      if (result == null || result.files.isEmpty) return;
-
-      final picked = result.files.single;
-      final fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_${picked.name}';
-      final bucket =
-          'projects'; // ensure this bucket exists in Supabase Storage
-      final user = supabase.auth.currentUser;
-
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Not signed in — cannot upload.')),
-        );
-        return;
-      }
-
-      setState(() => _isLoading = true);
-
-      // Upload differently for web and mobile
-      if (kIsWeb) {
-        // on web we have bytes in picked.bytes
-        if (picked.bytes == null) {
-          throw Exception('No file bytes found on web.');
-        }
-        final Uint8List data = picked.bytes!;
-        // Supabase Flutter supports uploadBinary for web
-        await supabase.storage.from(bucket).uploadBinary(fileName, data);
-      } else {
-        // mobile: use File(path)
-        if (picked.path == null) throw Exception('No file path.');
-        final file = File(picked.path!);
-        await supabase.storage.from(bucket).upload(fileName, file);
-      }
-
-      // Get public URL
-      final publicUrlResponse = supabase.storage
-          .from(bucket)
-          .getPublicUrl(fileName);
-      final fileUrl = publicUrlResponse; // string
-
-      // Insert metadata row into projects table
-      final insertRes = await supabase
-          .from('projects')
-          .insert({
-            'user_id': user.id,
-            'title': picked.name,
-            'file_url': fileUrl,
-            'status': 'Requested', // default status - change if you want
-            'created_at': DateTime.now().toIso8601String(),
-          })
-          .select()
-          .single();
-
-      // success
+  Future<void> _mockUploadDocument() async {
+    // Mock upload function
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Document uploaded and project created.')),
+        const SnackBar(content: Text('Mock Upload: Project creation feature placeholder.')),
       );
-
-      // refresh list
-      await _fetchProjects();
-    } catch (e, st) {
-      debugPrint('Upload error: $e\n$st');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
-      setState(() => _isLoading = false);
-    } finally {
       setState(() => _isLoading = false);
     }
   }
@@ -144,13 +130,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   Color _getStatusColor(String? status) {
     switch ((status ?? '').toLowerCase()) {
       case 'active':
-        return const Color(0xFF4CAF50);
+        return const Color(0xFF4CAF50); // Green
       case 'planning':
-        return const Color(0xFFFF9800);
+        return const Color(0xFFFF9800); // Orange
       case 'completed':
-        return const Color(0xFF2196F3);
+        return const Color(0xFF2196F3); // Blue
       case 'requested':
-        return Colors.red;
+        return const Color(0xFFFF5252); // Red (A brighter red for visibility)
       default:
         return Colors.grey;
     }
@@ -167,10 +153,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1416),
+      backgroundColor: const Color(0xFF0F1416), // Dark background
       floatingActionButton: FloatingActionButton(
-        onPressed: _uploadDocument,
-        child: const Icon(Icons.upload_file),
+        onPressed: _mockUploadDocument,
+        backgroundColor: const Color(0xFF0D47A1), // Blue button
+        child: const Icon(Icons.upload_file, color: Colors.white),
       ),
       body: SafeArea(
         child: Padding(
@@ -185,8 +172,15 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0D47A1),
+                      color: const Color(0xFF0D47A1), // Deep Blue icon background
                       borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0D47A1).withOpacity(0.5),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: const Icon(
                       Icons.business_center,
@@ -206,8 +200,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.refresh, color: Colors.white70),
-                    onPressed: _fetchProjects,
-                  ),
+                    onPressed: _loadStaticProjects, // Mock refresh
+                  )
                 ],
               ),
               const SizedBox(height: 16),
@@ -222,15 +216,20 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   itemBuilder: (context, i) {
                     final f = _filters[i];
                     final selected = f == _selectedFilter;
-                    return ChoiceChip(
-                      label: Text(f),
-                      selected: selected,
-                      onSelected: (sel) => setState(() => _selectedFilter = f),
-                      selectedColor: const Color(0xFF0D47A1),
-                      backgroundColor: const Color(0xFF1E1E1E),
-                      labelStyle: TextStyle(
-                        color: selected ? Colors.white : Colors.grey,
+                    return ActionChip( // Used ActionChip for better responsiveness than ChoiceChip
+                      label: Text(f, style: TextStyle(
+                        color: selected ? Colors.white : Colors.grey[400],
+                        fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                      )),
+                      onPressed: () => setState(() => _selectedFilter = f),
+                      backgroundColor: selected ? const Color(0xFF0D47A1) : const Color(0xFF1E1E1E),
+                      side: BorderSide(
+                        color: selected ? const Color(0xFF2196F3) : Colors.grey.withOpacity(0.3),
                       ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     );
                   },
                 ),
@@ -241,87 +240,97 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               // Body
               Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(child: CircularProgressIndicator(color: Color(0xFF2196F3)))
                     : (_error != null)
-                    ? Center(
-                        child: Text(
-                          'Error: $_error',
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      )
-                    : _filteredProjects.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No projects yet. Upload one!',
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: _filteredProjects.length,
-                        itemBuilder: (context, idx) {
-                          final project = _filteredProjects[idx];
-                          final status =
-                              project['status']?.toString() ?? 'Unknown';
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1E1E1E),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _getStatusColor(status).withOpacity(0.6),
-                              ),
-                            ),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(
-                                project['title'] ?? 'Untitled',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Status: $status',
-                                    style: TextStyle(color: Colors.grey[400]),
-                                  ),
-                                  if (project['file_url'] != null) ...[
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      project['file_url'].toString(),
-                                      style: TextStyle(
-                                        color: Colors.blue[300],
-                                        fontSize: 12,
+                        ? Center(child: Text('Error: $_error', style: const TextStyle(color: Colors.red)))
+                        : _filteredProjects.isEmpty
+                            ? const Center(child: Text('No projects match the current filter.', style: TextStyle(color: Colors.white70)))
+                            : ListView.builder(
+                                itemCount: _filteredProjects.length,
+                                itemBuilder: (context, idx) {
+                                  final project = _filteredProjects[idx];
+                                  final status = project['status']?.toString() ?? 'Unknown';
+                                  final statusColor = _getStatusColor(status);
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF1E1E1E),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: statusColor.withOpacity(0.6),
+                                        width: 1.5,
                                       ),
-                                      overflow: TextOverflow.ellipsis,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ],
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(
-                                  Icons.open_in_new,
-                                  color: Colors.white70,
-                                ),
-                                onPressed: () {
-                                  // open project details or launch URL using url_launcher
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => ProjectDetailsScreen(
-                                        project: project,
+                                    child: Material( // Use Material for tap ripple effect
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => ProjectDetailsScreen(project: project),
+                                            ),
+                                          );
+                                        },
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(14),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      project['title'] ?? 'Untitled',
+                                                      style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 16),
+                                                    ),
+                                                    const SizedBox(height: 6),
+                                                    // Status Tag
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                      decoration: BoxDecoration(
+                                                        color: statusColor.withOpacity(0.2),
+                                                        borderRadius: BorderRadius.circular(6),
+                                                      ),
+                                                      child: Text(
+                                                        status,
+                                                        style: TextStyle(
+                                                          color: statusColor,
+                                                          fontWeight: FontWeight.w600,
+                                                          fontSize: 11,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    // File URL (Simplified display)
+                                                    if (project['file_url'] != null)
+                                                      Text(
+                                                        project['file_url'].toString().split('/').last,
+                                                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Icon(Icons.chevron_right, color: Colors.white70),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   );
                                 },
                               ),
-                            ),
-                          );
-                        },
-                      ),
               ),
             ],
           ),

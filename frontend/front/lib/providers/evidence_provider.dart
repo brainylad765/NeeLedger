@@ -2,7 +2,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../models/evidence_model.dart';
 import '../services/ai_service_mobile.dart'
     if (dart.library.html) '../services/ai_service_web.dart';
@@ -13,7 +15,9 @@ import 'package:image/image.dart' as img;
 const String? xaiApiUrl = null; // e.g. 'https://example.com/analyze'
 
 class EvidenceProvider with ChangeNotifier {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
   final List<Evidence> _items = [];
   final AIService _aiService = AIService();
   bool _isUploading = false;
@@ -31,46 +35,42 @@ class EvidenceProvider with ChangeNotifier {
     _listenToEvidence();
   }
 
-  void _listenToEvidence() {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return;
+  void _listenToEvidence() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
 
-    // Real-time subscription to evidence table
-    final subscription = _supabase
-        .channel('evidence')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'evidence',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (payload) {
-            _fetchEvidence(); // Refresh on change
-          },
-        )
-        .subscribe();
+    // Listen to Firestore collection changes for user's evidence
+    _firestore
+        .collection('evidence')
+        .where('user_id', isEqualTo: user.uid)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+          _items.clear();
+          for (var doc in snapshot.docs) {
+            _items.add(Evidence.fromJson(doc.data()));
+          }
+          notifyListeners();
+        });
 
     // Initial fetch
-    _fetchEvidence();
+    await _fetchEvidence();
   }
 
   Future<void> _fetchEvidence() async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return;
+    final user = _auth.currentUser;
+    if (user == null) return;
 
     try {
-      final response = await _supabase
-          .from('evidence')
-          .select()
-          .eq('user_id', userId)
-          .order('timestamp', ascending: false);
+      final snapshot = await _firestore
+          .collection('evidence')
+          .where('user_id', isEqualTo: user.uid)
+          .orderBy('timestamp', descending: true)
+          .get();
 
       _items.clear();
-      for (final json in response) {
-        _items.add(Evidence.fromJson(json));
+      for (final doc in snapshot.docs) {
+        _items.add(Evidence.fromJson(doc.data()));
       }
       notifyListeners();
     } catch (e) {
@@ -91,10 +91,11 @@ class EvidenceProvider with ChangeNotifier {
     try {
       String downloadURL;
       final fileName = '${const Uuid().v4()}_${path.basename(filePath)}';
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) {
+      final user = _auth.currentUser;
+      if (user == null) {
         throw Exception('User not authenticated');
       }
+      final userId = user.uid;
 
       List<Map<String, dynamic>> detections = [];
       Uint8List uploadBytes;
@@ -129,18 +130,13 @@ class EvidenceProvider with ChangeNotifier {
         }
       }
 
-      // Upload to Supabase Storage
-      if (kIsWeb) {
-        await _supabase.storage
-            .from('evidence')
-            .uploadBinary(fileName, uploadBytes);
-      } else {
-        final file = File(filePath);
-        await _supabase.storage.from('evidence').upload(fileName, file);
-      }
-      downloadURL = _supabase.storage.from('evidence').getPublicUrl(fileName);
+      // Upload to Firebase Storage
+      final storageRef = _storage.ref().child('evidence/$fileName');
+      final uploadTask = storageRef.putData(uploadBytes);
+      final snapshot = await uploadTask.whenComplete(() {});
+      downloadURL = await snapshot.ref.getDownloadURL();
 
-      // Save evidence metadata to Supabase
+      // Save evidence metadata to Firestore
       final evidenceData = {
         'id': const Uuid().v4(),
         'user_id': userId,
@@ -150,16 +146,16 @@ class EvidenceProvider with ChangeNotifier {
         'timestamp': DateTime.now().toIso8601String(),
         'detections': detections,
       };
-      await _supabase.from('evidence').insert(evidenceData);
+      await _firestore.collection('evidence').add(evidenceData);
 
       // Add to local list for immediate display
       final ev = Evidence.fromJson(evidenceData);
       _items.insert(0, ev);
 
-      debugPrint('✅ Evidence uploaded to Supabase successfully!');
+      debugPrint('✅ Evidence uploaded to Firebase successfully!');
     } catch (e) {
       _uploadError = e.toString();
-      debugPrint('❌ Error uploading evidence to Supabase: $e');
+      debugPrint('❌ Error uploading evidence to Firebase: $e');
     } finally {
       _isUploading = false;
       notifyListeners();
@@ -186,20 +182,19 @@ class EvidenceProvider with ChangeNotifier {
 
     try {
       final uniqueFileName = '${const Uuid().v4()}_$fileName';
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) {
+      final user = _auth.currentUser;
+      if (user == null) {
         throw Exception('User not authenticated');
       }
+      final userId = user.uid;
 
-      // Upload to Supabase Storage
-      await _supabase.storage
-          .from('evidence')
-          .uploadBinary(uniqueFileName, fileBytes);
-      final downloadURL = _supabase.storage
-          .from('evidence')
-          .getPublicUrl(uniqueFileName);
+      // Upload to Firebase Storage
+      final storageRef = _storage.ref().child('evidence/$uniqueFileName');
+      final uploadTask = storageRef.putData(fileBytes);
+      final snapshot = await uploadTask.whenComplete(() {});
+      final downloadURL = await snapshot.ref.getDownloadURL();
 
-      // Save evidence metadata to Supabase
+      // Save evidence metadata to Firestore
       final evidenceData = {
         'id': const Uuid().v4(),
         'user_id': userId,
@@ -209,16 +204,16 @@ class EvidenceProvider with ChangeNotifier {
         'timestamp': DateTime.now().toIso8601String(),
         'detections': null,
       };
-      await _supabase.from('evidence').insert(evidenceData);
+      await _firestore.collection('evidence').add(evidenceData);
 
       // Add to local list for immediate display
       final ev = Evidence.fromJson(evidenceData);
       _items.insert(0, ev);
 
-      debugPrint('✅ PDF evidence uploaded to Supabase successfully!');
+      debugPrint('✅ PDF evidence uploaded to Firebase successfully!');
     } catch (e) {
       _uploadError = e.toString();
-      debugPrint('❌ Error uploading PDF evidence to Supabase: $e');
+      debugPrint('❌ Error uploading PDF evidence to Firebase: $e');
     } finally {
       _isUploading = false;
       notifyListeners();

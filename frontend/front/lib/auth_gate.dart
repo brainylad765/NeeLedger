@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'screens/home_screen_new.dart';
 import 'screens/login_screen.dart';
 
@@ -9,8 +9,8 @@ class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // StreamBuilder listens to the real-time auth changes
-    return StreamBuilder<AuthState>(
-      stream: Supabase.instance.client.auth.onAuthStateChange,
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -18,10 +18,10 @@ class AuthGate extends StatelessWidget {
           );
         }
 
-        final session = snapshot.data?.session;
+        final user = snapshot.data;
 
-        // If a valid session exists, show the home screen
-        if (session != null) {
+        // If a valid user exists, show the home screen
+        if (user != null) {
           return const HomeScreen();
         }
 

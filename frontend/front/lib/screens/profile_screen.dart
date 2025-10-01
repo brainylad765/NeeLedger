@@ -12,6 +12,7 @@ import '../providers/user_provider.dart';
 import 'yourprojects_screen.dart';
 import 'uploads_screen.dart';
 import 'recent_trans.dart';
+import 'buffer_pool_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -457,6 +458,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const RecentTransScreen(),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.memory, color: Color(0xFF0D47A1)),
+                    title: const Text(
+                      'Buffer Pool',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    subtitle: const Text(
+                      'choose your buffer pool amount',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const BufferPoolScreen(),
                       ),
                     ),
                   ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart'; // Supabase deactivated
 import 'package:file_picker/file_picker.dart'; // For file selection
 import 'dart:io';
 
@@ -20,7 +20,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final supabase = Supabase.instance.client;
+  // final supabase = Supabase.instance.client; // Supabase deactivated
 
   int _selectedIndex = 2; // Start on Home tab
   int _hoveredIndex = -1;
@@ -40,8 +40,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   /// ===============================
-  /// Supabase Upload Functionality
+  /// Supabase Upload Functionality - Deactivated
   /// ===============================
+  /*
   Future<void> _uploadDocument() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -93,6 +94,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .select()
         .order('created_at', ascending: false);
   }
+  */
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +107,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: Theme.of(context).bottomNavigationBarTheme.backgroundColor,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 26),
+                color: Colors.black.withAlpha(26),
                 blurRadius: 8,
                 offset: const Offset(0, -2),
               ),
@@ -142,12 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             }),
           ),
         ),
-        floatingActionButton: _selectedIndex == 1
-            ? FloatingActionButton(
-                onPressed: _uploadDocument,
-                child: const Icon(Icons.add),
-              )
-            : null,
+        floatingActionButton: null, // Disabled upload button
       ),
     );
   }
