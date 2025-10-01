@@ -39,7 +39,7 @@ class _DataScreenState extends State<DataScreen> {
     try {
       setState(() {
         _isUploading = true;
-          _uploadStatus = 'Selecting file...';
+        _uploadStatus = 'Selecting file...';
       });
 
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -50,9 +50,11 @@ class _DataScreenState extends State<DataScreen> {
 
       if (result != null && result.files.isNotEmpty) {
         final provider = Provider.of<UploadProvider>(context, listen: false);
-        final evidenceProvider =
-            Provider.of<EvidenceProvider>(context, listen: false);
-        
+        final evidenceProvider = Provider.of<EvidenceProvider>(
+          context,
+          listen: false,
+        );
+
         for (final file in result.files) {
           if (file.path == null) continue;
 
@@ -61,8 +63,9 @@ class _DataScreenState extends State<DataScreen> {
               '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
 
           // 🔥 Firebase Storage upload
-          final storageRef =
-              FirebaseStorage.instance.ref().child('uploads/$fileName');
+          final storageRef = FirebaseStorage.instance.ref().child(
+            'uploads/$fileName',
+          );
 
           UploadTask uploadTask = storageRef.putFile(localFile);
 
@@ -167,61 +170,71 @@ class _DataScreenState extends State<DataScreen> {
               const SizedBox(height: 32),
 
               // Upload Section
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E1E),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Upload Files',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+              Consumer<UploadProvider>(
+                builder: (context, provider, child) {
+                  final hasPdfs = provider.pdfs.isNotEmpty;
+                  return Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1E1E),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Supported formats: CSV, Excel, JSON, PDF',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: CustomButton(
-                        text:
-                            _isUploading ? 'Uploading...' : 'Select & Upload File',
-                        onPressed: _isUploading ? () {} : _pickAndUploadFile,
-                      ),
-                    ),
-                    if (_uploadStatus.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            LinearProgressIndicator(
-                              value: _isUploading ? _uploadProgress : null,
-                              backgroundColor: Colors.grey[800],
-                              color: Colors.blue,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _uploadStatus,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hasPdfs
+                              ? 'Upload your monitoring documents here...'
+                              : 'Upload your PD documents',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                  ],
-                ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Supported formats: CSV, Excel, JSON, PDF',
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: CustomButton(
+                            text: _isUploading
+                                ? 'Uploading...'
+                                : 'Select & Upload File',
+                            onPressed: _isUploading
+                                ? () {}
+                                : _pickAndUploadFile,
+                          ),
+                        ),
+                        if (_uploadStatus.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                LinearProgressIndicator(
+                                  value: _isUploading ? _uploadProgress : null,
+                                  backgroundColor: Colors.grey[800],
+                                  color: Colors.blue,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _uploadStatus,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 32),

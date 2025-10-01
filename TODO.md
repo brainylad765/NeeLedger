@@ -1,10 +1,3 @@
-- [ ] Remove Firebase and Supabase dependencies from frontend/front/pubspec.yaml
-- [ ] Remove firebase-admin from backend/requirements.txt
-- [ ] Delete Firebase/Supabase related files: firebase_options.dart, firebase.json, test-supabase-connection.js, test-supabase-documents.js, test_firebase.html, SUPABASE_INTEGRATION_GUIDE.md, supabase_documents_schema.sql, create-database-schema.sql, dataconnect/, firebase-functions/, functions/
-- [ ] Modify frontend/front/lib/main.dart: remove Firebase initialization and Supabase init in UploadProvider
-- [ ] Modify frontend/front/lib/auth_repository.dart: remove Firebase code, make auth local or stub
-- [ ] Modify frontend/front/lib/auth_gate.dart: remove Firebase auth check, allow access
-- [ ] Modify frontend/front/lib/providers/upload_provider.dart: remove Supabase code, keep local uploads
-- [ ] Check and modify other files for Firebase/Supabase imports
-- [ ] Run flutter pub get
-- [ ] Test build
+- [x] Edit projects_screen.dart: import project_details_screen.dart and remove mock ProjectDetailsScreen class
+- [x] Edit data_screen.dart: add real-time dialog for PDF uploads
+- [x] Fix syncing for "Your Uploads" in profile (renamed "Uploads" to "Your Uploads")

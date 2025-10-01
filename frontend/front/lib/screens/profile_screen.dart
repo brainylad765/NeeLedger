@@ -411,7 +411,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: Color(0xFF0D47A1),
                     ),
                     title: const Text(
-                      'Uploads',
+                      'Your Uploads',
                       style: TextStyle(color: Colors.white),
                     ),
                     trailing: const Icon(

@@ -41,8 +41,17 @@ import 'screens/yourprojects_screen.dart';
 import 'screens/buffer_pool_screen.dart';
 import 'screens/nextlogin.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Supabase
+  await Supabase.initialize(
+    url:
+        'https://your-supabase-url.supabase.co', // Replace with your Supabase URL
+    anonKey: 'your-anon-key', // Replace with your Supabase anon key
+  );
 
   // ✅ Firebase initialization
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);

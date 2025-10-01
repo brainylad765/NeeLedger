@@ -4,6 +4,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PdfMeta {
   final String id;
@@ -56,6 +61,8 @@ class ImageUpload {
   };
 }
 
+
+
 class UploadProvider extends ChangeNotifier {
   final List<PdfMeta> _pdfs = [];
   final List<String> _projects = [];
@@ -63,6 +70,10 @@ class UploadProvider extends ChangeNotifier {
   final Uuid _uuid = const Uuid();
   bool _hasInitialUploads = false;
   int _totalUploads = 0;
+
+  UploadProvider() {
+    _loadFromPrefs();
+  }
 
   // Local getters (temporary, cleared on hot reload)
   List<PdfMeta> get pdfs => List.unmodifiable(_pdfs);
@@ -82,7 +93,7 @@ class UploadProvider extends ChangeNotifier {
         timestamp: DateTime.now(),
       );
 
-      // Add to local storage (temporary)
+      // Add to local storage (persistent)
       _pdfs.add(pdf);
       _projects.add(file.name); // Text-only project from PDF name
       _totalUploads++;
@@ -91,6 +102,8 @@ class UploadProvider extends ChangeNotifier {
       if (!_hasInitialUploads) {
         _hasInitialUploads = true;
       }
+
+      await _saveToPrefs();
 
       notifyListeners();
     } catch (e) {
@@ -112,7 +125,7 @@ class UploadProvider extends ChangeNotifier {
         timestamp: DateTime.now(),
       );
 
-      // Add to local storage (temporary)
+      // Add to local storage (persistent)
       _images.add(image);
       _totalUploads++;
 
@@ -120,6 +133,8 @@ class UploadProvider extends ChangeNotifier {
       if (!_hasInitialUploads) {
         _hasInitialUploads = true;
       }
+
+      await _saveToPrefs();
 
       notifyListeners();
 
@@ -171,6 +186,7 @@ class UploadProvider extends ChangeNotifier {
     _images.clear();
     _hasInitialUploads = false;
     _totalUploads = 0;
+    _saveToPrefs();
     notifyListeners();
   }
 
@@ -189,4 +205,57 @@ class UploadProvider extends ChangeNotifier {
     'images': _images.length,
     'total': _totalUploads,
   };
+
+  Future<void> _saveToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pdfList = _pdfs.map((pdf) => jsonEncode(pdf.toJson())).toList();
+    final imageList = _images.map((img) => jsonEncode(img.toJson())).toList();
+    await prefs.setStringList('pdfs', pdfList);
+    await prefs.setStringList('images', imageList);
+  }
+
+  Future<void> _loadFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pdfList = prefs.getStringList('pdfs') ?? [];
+    final imageList = prefs.getStringList('images') ?? [];
+
+    _pdfs.clear();
+    _images.clear();
+
+    for (var pdfStr in pdfList) {
+      try {
+        final Map<String, dynamic> jsonMap = jsonDecode(pdfStr);
+        _pdfs.add(PdfMeta(
+          id: jsonMap['id'] ?? '',
+          name: jsonMap['name'] ?? 'Unknown',
+          size: jsonMap['size'] ?? 0,
+          timestamp: DateTime.parse(jsonMap['timestamp'] ?? DateTime.now().toIso8601String()),
+        ));
+      } catch (e) {
+        debugPrint('Error decoding PDF from prefs: $e');
+      }
+    }
+
+    for (var imgStr in imageList) {
+      try {
+        final Map<String, dynamic> jsonMap = jsonDecode(imgStr);
+        _images.add(ImageUpload(
+          id: jsonMap['id'] ?? '',
+          path: jsonMap['path'] ?? '',
+          latitude: jsonMap['latitude'],
+          longitude: jsonMap['longitude'],
+          timestamp: DateTime.parse(jsonMap['timestamp'] ?? DateTime.now().toIso8601String()),
+          progress: (jsonMap['progress'] ?? 100).toDouble(),
+          status: jsonMap['status'] ?? 'completed',
+        ));
+      } catch (e) {
+        debugPrint('Error decoding Image from prefs: $e');
+      }
+    }
+
+    _hasInitialUploads = _pdfs.isNotEmpty || _images.isNotEmpty;
+    _totalUploads = _pdfs.length + _images.length;
+
+    notifyListeners();
+  }
 }
